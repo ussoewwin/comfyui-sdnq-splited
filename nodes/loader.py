@@ -172,42 +172,6 @@ class SDNQModelLoader:
             print("Note: If the progress bar appears stuck, it is likely verifying files or downloading large chunks. Please wait.")
 
             pipeline = diffusers.DiffusionPipeline.from_pretrained(
-                model_path,
-                torch_dtype=torch_dtype,
-                local_files_only=is_local,
-            )
-
-
-            print(f"Pipeline loaded: {type(pipeline).__name__}")
-
-            # Apply quantized matmul optimization if requested and available
-            if use_quantized_matmul:
-                if triton_is_available:
-                    print("Applying Triton quantized matmul optimization...")
-                    if hasattr(pipeline, 'transformer') and pipeline.transformer is not None:
-                        pipeline.transformer = apply_sdnq_options_to_model(
-                            pipeline.transformer,
-                            use_quantized_matmul=True
-                        )
-                    elif hasattr(pipeline, 'unet') and pipeline.unet is not None:
-                        pipeline.unet = apply_sdnq_options_to_model(
-                            pipeline.unet,
-                            use_quantized_matmul=True
-                        )
-                else:
-                    print("Warning: Triton not available, skipping quantized matmul optimization")
-
-            # Apply CPU offloading if requested
-            if cpu_offload:
-                print("Enabling model CPU offload...")
-                pipeline.enable_model_cpu_offload()
-
-            # Wrap pipeline components for ComfyUI compatibility
-            print("Wrapping pipeline components for ComfyUI...")
-            model_wrapper, clip_wrapper, vae_wrapper = wrap_pipeline_components(pipeline)
-
-            print(f"{'='*60}")
-            print("✓ Model loaded successfully!")
             print(f"{'='*60}\n")
 
             return (model_wrapper, clip_wrapper, vae_wrapper)
