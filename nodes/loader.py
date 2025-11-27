@@ -18,13 +18,13 @@ from sdnq.common import use_torch_compile as triton_is_available
 import diffusers
 from diffusers import DiffusionPipeline
 
-# Import ComfyUI modules for native model loading
-import comfy.sd
+# Import ComfyUI modules
 import folder_paths
 
 from ..core.config import get_dtype_from_string
 from ..core.registry import get_model_names_for_dropdown, get_repo_id_from_name, get_model_info
 from ..core.downloader import download_model, check_model_cached, get_cached_model_path
+from ..core.wrapper import wrap_pipeline_components
 
 
 class SDNQModelLoader:
@@ -81,34 +81,20 @@ class SDNQModelLoader:
     DESCRIPTION = "Load SDNQ quantized models with automatic downloads. Models by Disty0."
 
     @staticmethod
-    def cleanup_resources(pipeline=None, model_component=None, model_state_dict=None,
-                          clip_data=None, vae_state_dict=None, force=True):
+    def cleanup_resources(pipeline=None, force=True):
         """
-        Comprehensive cleanup of resources to prevent torch compile state pollution.
+        Cleanup pipeline resources to prevent torch compile state pollution.
 
         This is critical to prevent the "black image" bug where failed loads break
-        subsequent ComfyUI workflows. Based on KJNodes approach to torch compile cleanup.
+        subsequent ComfyUI workflows.
 
         Args:
             pipeline: Diffusers pipeline to delete
-            model_component: Transformer/UNet component to delete
-            model_state_dict: Model state dict to delete
-            clip_data: CLIP state dicts to delete
-            vae_state_dict: VAE state dict to delete
             force: Force aggressive cleanup (torch compile reset, gc)
         """
         try:
-            # Delete references in reverse order of creation
-            if vae_state_dict is not None:
-                del vae_state_dict
-            if clip_data is not None:
-                del clip_data
-            if model_state_dict is not None:
-                del model_state_dict
-            if model_component is not None:
-                del model_component
             if pipeline is not None:
-                # Ensure pipeline components are moved to CPU before deletion
+                # Move pipeline to CPU before deletion to free VRAM
                 try:
                     if hasattr(pipeline, 'to'):
                         pipeline.to('cpu')
@@ -242,10 +228,6 @@ class SDNQModelLoader:
 
         # Track resources for cleanup
         pipeline = None
-        model_component = None
-        model_state_dict = None
-        clip_data = None
-        vae_state_dict = None
 
         try:
             # Load pipeline with SDNQ support
@@ -263,106 +245,29 @@ class SDNQModelLoader:
             )
 
             print(f"✓ Pipeline loading complete", flush=True)
-
             print(f"Pipeline loaded: {type(pipeline).__name__}")
 
-            # Extract state dictionaries from pipeline components
-            print("Extracting model components for ComfyUI integration...")
-
-            # Get transformer/unet component
-            # Note: Different pipeline types (T2I, I2I, I2V, T2V, multimodal) all use
-            # transformer or unet architecture. DiffusionPipeline loads the correct type:
-            # - FLUX.1/FLUX.2: FluxPipeline (text-to-image with optional image guidance)
-            # - Qwen-Image-Edit: QwenImageEditPipeline (image editing, requires input image)
-            # - Wan2.2: Video pipelines (I2V, T2V with temporal components)
-            if hasattr(pipeline, 'transformer') and pipeline.transformer is not None:
-                model_component = pipeline.transformer
-                model_type = "transformer"
-            elif hasattr(pipeline, 'unet') and pipeline.unet is not None:
-                model_component = pipeline.unet
-                model_type = "unet"
-            else:
-                raise RuntimeError("Pipeline missing transformer or unet component")
-
-            print(f"Model component: {model_type}")
-
-            # Extract state dictionary from model component
-            # The quantized weights are preserved in the state_dict
-            print("Extracting model state dictionary...")
-            model_state_dict = model_component.state_dict()
-
-            # DEBUG: Log state dict keys for troubleshooting
-            print(f"\n{'─'*60}")
-            print(f"DEBUG: State Dict Analysis")
-            print(f"{'─'*60}")
-            print(f"Total keys in state_dict: {len(model_state_dict.keys())}")
-            sample_keys = list(model_state_dict.keys())[:10]
-            print(f"Sample keys (first 10):")
-            for i, key in enumerate(sample_keys, 1):
-                tensor_shape = tuple(model_state_dict[key].shape) if hasattr(model_state_dict[key], 'shape') else "N/A"
-                tensor_dtype = model_state_dict[key].dtype if hasattr(model_state_dict[key], 'dtype') else "N/A"
-                print(f"  {i}. {key}")
-                print(f"     Shape: {tensor_shape}, Dtype: {tensor_dtype}")
-            print(f"{'─'*60}\n")
-
-            # Fix SDNQ state dict for ComfyUI compatibility
-            # SDNQ models may be missing bias terms that ComfyUI's loader expects
-            print("Preparing state dict for ComfyUI compatibility...")
-
-            # Check for and add missing bias terms
-            # ComfyUI's model detection looks for x_embedder.bias, context_embedder.bias, etc.
-            bias_keys_to_check = [
-                "x_embedder.bias",
-                "context_embedder.bias",
-                "t_embedder.bias",
-                "y_embedder.bias",
-            ]
-
-            for bias_key in bias_keys_to_check:
-                weight_key = bias_key.replace(".bias", ".weight")
-                if weight_key in model_state_dict and bias_key not in model_state_dict:
-                    # Add zero bias with correct shape
-                    weight_shape = model_state_dict[weight_key].shape
-                    # bias shape is the output dimension (first dim of weight for linear layers)
-                    bias_shape = weight_shape[0] if len(weight_shape) > 1 else weight_shape[0]
-                    model_state_dict[bias_key] = torch.zeros(bias_shape, dtype=torch_dtype, device="cpu")
-                    print(f"  Added missing {bias_key} (shape: {bias_shape})")
-
-            model_options = {"dtype": torch_dtype}
-
-            # Load via ComfyUI's native diffusion model loader
-            # This creates a proper ModelPatcher with latent_format attribute
-            print("Loading via ComfyUI native model loader...")
-            print("This step detects model architecture from state_dict keys...")
-            model = comfy.sd.load_diffusion_model_state_dict(
-                model_state_dict,
-                model_options=model_options
-            )
-            print(f"✓ Model architecture detected: {type(model).__name__ if model else 'Unknown'}")
-
-            # Apply SDNQ Triton optimizations to the model inside the ModelPatcher
+            # Apply SDNQ Triton optimizations to pipeline components (optional)
             # This adds quantized matmul operations for faster inference
-            # WARNING: This uses torch.compile which can pollute torch state on failure
             if use_quantized_matmul and triton_is_available:
                 print("Applying SDNQ Triton quantized matmul optimization...")
-                print("(This uses torch.compile - if errors occur, torch state will be reset)")
                 try:
-                    # ModelPatcher has a model attribute containing the actual BaseModel
-                    # Save original reference in case we need to restore it
-                    original_model = model.model
-                    model.model = apply_sdnq_options_to_model(
-                        model.model,
-                        use_quantized_matmul=True
-                    )
-                    print("✓ Triton optimizations applied successfully")
+                    # Apply to transformer or unet component
+                    if hasattr(pipeline, 'transformer') and pipeline.transformer is not None:
+                        pipeline.transformer = apply_sdnq_options_to_model(
+                            pipeline.transformer,
+                            use_quantized_matmul=True
+                        )
+                        print("✓ Triton optimizations applied to transformer")
+                    elif hasattr(pipeline, 'unet') and pipeline.unet is not None:
+                        pipeline.unet = apply_sdnq_options_to_model(
+                            pipeline.unet,
+                            use_quantized_matmul=True
+                        )
+                        print("✓ Triton optimizations applied to unet")
                 except Exception as opt_error:
                     print(f"Warning: Could not apply Triton optimizations: {opt_error}")
                     print("Model will still work with quantized weights, just without Triton acceleration")
-                    # Restore original model if optimization failed
-                    try:
-                        model.model = original_model
-                    except:
-                        pass
                     # Reset torch compile state to prevent pollution
                     try:
                         torch._dynamo.reset()
@@ -372,43 +277,21 @@ class SDNQModelLoader:
             elif use_quantized_matmul and not triton_is_available:
                 print("Note: Triton not available - model uses quantized weights but not Triton kernels")
 
-            # Extract CLIP components
-            print("Extracting CLIP components...")
-            clip_data = self._extract_clip_state_dicts(pipeline)
+            # Get model type from registry if available
+            model_type = None
+            if model_info:
+                model_type = model_info.get('type', None)
 
-            if clip_data:
-                embedding_dir = folder_paths.get_folder_paths("embeddings")[0] if folder_paths.get_folder_paths("embeddings") else None
-                clip = comfy.sd.load_text_encoder_state_dicts(
-                    clip_data,
-                    embedding_directory=embedding_dir
-                )
-            else:
-                print("Warning: No CLIP components found in pipeline")
-                clip = None
-
-            # Extract VAE
-            print("Extracting VAE component...")
-            if hasattr(pipeline, 'vae') and pipeline.vae is not None:
-                vae_state_dict = pipeline.vae.state_dict()
-                vae = comfy.sd.VAE(sd=vae_state_dict)
-            else:
-                print("Warning: No VAE component found in pipeline")
-                vae = None
-
-            # Clean up pipeline and intermediate objects
-            # Use non-forced cleanup since we succeeded
-            print("Cleaning up intermediate resources...")
-            self.cleanup_resources(
-                pipeline=pipeline,
-                model_component=model_component,
-                model_state_dict=model_state_dict,
-                clip_data=clip_data,
-                vae_state_dict=vae_state_dict,
-                force=False  # Normal cleanup, no torch dynamo reset needed
-            )
+            # Wrap pipeline components for ComfyUI compatibility
+            # This creates MODEL, CLIP, VAE objects that work directly with ComfyUI nodes
+            print("Wrapping pipeline components for ComfyUI integration...")
+            model, clip, vae = wrap_pipeline_components(pipeline, model_type=model_type)
 
             print(f"{'='*60}")
-            print("✓ Model loaded successfully via ComfyUI native loaders!")
+            print("✓ Model loaded successfully!")
+            print(f"  MODEL type: {type(model).__name__}")
+            print(f"  CLIP type: {type(clip).__name__}")
+            print(f"  VAE type: {type(vae).__name__}")
             print(f"{'='*60}\n")
 
             return (model, clip, vae)
@@ -432,38 +315,8 @@ class SDNQModelLoader:
             print("Performing aggressive cleanup to prevent session corruption...")
             self.cleanup_resources(
                 pipeline=pipeline,
-                model_component=model_component,
-                model_state_dict=model_state_dict,
-                clip_data=clip_data,
-                vae_state_dict=vae_state_dict,
                 force=True  # Force torch dynamo reset and full cleanup
             )
             print("✓ Cleanup complete - ComfyUI session should remain stable")
 
             raise RuntimeError(f"Failed to load SDNQ model: {str(e)}") from e
-
-    def _extract_clip_state_dicts(self, pipeline) -> Dict[str, Any]:
-        """
-        Extract CLIP text encoder state dictionaries from a diffusers pipeline.
-
-        Args:
-            pipeline: Diffusers pipeline object
-
-        Returns:
-            Dictionary with clip_l and/or clip_g state dicts, or None if no text encoders
-        """
-        clip_data = {}
-
-        # Check for text_encoder (CLIP-L or similar)
-        if hasattr(pipeline, 'text_encoder') and pipeline.text_encoder is not None:
-            clip_data['clip_l'] = pipeline.text_encoder.state_dict()
-
-        # Check for text_encoder_2 (CLIP-G or T5)
-        if hasattr(pipeline, 'text_encoder_2') and pipeline.text_encoder_2 is not None:
-            clip_data['clip_g'] = pipeline.text_encoder_2.state_dict()
-
-        # Check for text_encoder_3 (some models have 3 encoders)
-        if hasattr(pipeline, 'text_encoder_3') and pipeline.text_encoder_3 is not None:
-            clip_data['t5xxl'] = pipeline.text_encoder_3.state_dict()
-
-        return clip_data if clip_data else None
