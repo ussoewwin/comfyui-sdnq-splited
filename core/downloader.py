@@ -10,6 +10,10 @@ import time
 from typing import Optional, Callable, Dict
 from pathlib import Path
 from huggingface_hub import snapshot_download, hf_hub_download, try_to_load_from_cache, model_info
+from .config import get_sdnq_models_dir
+
+# Disable symlink warnings on Windows (where symlinks require admin privileges)
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
 
 class DownloadProgress:
@@ -45,11 +49,11 @@ def download_model(
     max_workers: int = 8
 ) -> str:
     """
-    Download a model from HuggingFace Hub.
+    Download a model from HuggingFace Hub to ComfyUI's models folder.
 
     Args:
         repo_id: HuggingFace repository ID (e.g., "Disty0/FLUX.1-dev-qint8")
-        cache_dir: Optional custom cache directory (default: HF cache)
+        cache_dir: Optional custom cache directory (default: ComfyUI models/diffusers/sdnq/)
         progress_callback: Optional callback function for progress updates
         force_download: Force re-download even if cached
         max_workers: Number of parallel download threads
@@ -60,26 +64,26 @@ def download_model(
     Raises:
         Exception: If download fails
     """
+    # Use ComfyUI models folder if no custom cache_dir specified
+    if cache_dir is None:
+        sdnq_base_dir = get_sdnq_models_dir()
+    else:
+        sdnq_base_dir = cache_dir
+
+    # Create model-specific directory
+    model_name = repo_id.replace("/", "--")
+    model_dir = os.path.join(sdnq_base_dir, model_name)
+
     print(f"\n{'='*60}")
     print(f"Downloading SDNQ Model from HuggingFace Hub")
     print(f"{'='*60}")
     print(f"Repository: {repo_id}")
 
-    # Check if already cached first (unless force_download)
-    if not force_download:
-        try:
-            cached_path = try_to_load_from_cache(
-                repo_id=repo_id,
-                filename="model_index.json",
-                cache_dir=cache_dir
-            )
-            if cached_path and cached_path != "_not_found_":
-                model_dir = os.path.dirname(cached_path)
-                print(f"✓ Model already cached at: {model_dir}")
-                print(f"{'='*60}\n")
-                return model_dir
-        except Exception:
-            pass
+    # Check if already downloaded (unless force_download)
+    if not force_download and os.path.exists(os.path.join(model_dir, "model_index.json")):
+        print(f"✓ Model already exists at: {model_dir}")
+        print(f"{'='*60}\n")
+        return model_dir
 
     print("Fetching model info...")
     try:
@@ -101,10 +105,12 @@ def download_model(
 
     try:
         # Download entire model using snapshot_download
-        # This handles caching, resume, and parallel downloads automatically
+        # Use local_dir to store in ComfyUI models folder (not HF cache)
+        # Disable symlinks to avoid Windows admin privilege issues
         local_path = snapshot_download(
             repo_id=repo_id,
-            cache_dir=cache_dir,
+            local_dir=model_dir,
+            local_dir_use_symlinks=False,  # Fixes Windows "WinError 1314" symlink privilege issue
             force_download=force_download,
             max_workers=max_workers,
             # HuggingFace Hub handles progress internally
@@ -139,47 +145,54 @@ def download_model(
 
 def check_model_cached(repo_id: str, cache_dir: Optional[str] = None) -> bool:
     """
-    Check if a model is already cached locally.
+    Check if a model is already downloaded locally.
 
     Args:
         repo_id: HuggingFace repository ID
         cache_dir: Optional custom cache directory
 
     Returns:
-        True if model is cached, False otherwise
+        True if model exists, False otherwise
     """
-    try:
-        cached_path = try_to_load_from_cache(
-            repo_id=repo_id,
-            filename="model_index.json",
-            cache_dir=cache_dir
-        )
-        return cached_path is not None and cached_path != "_not_found_"
-    except Exception:
-        return False
+    model_path = get_cached_model_path(repo_id, cache_dir)
+    return model_path is not None and os.path.exists(model_path)
 
 
 def get_cached_model_path(repo_id: str, cache_dir: Optional[str] = None) -> Optional[str]:
     """
-    Get the path to a cached model.
+    Get the path to a downloaded model in ComfyUI's models folder.
 
     Args:
         repo_id: HuggingFace repository ID
         cache_dir: Optional custom cache directory
 
     Returns:
-        Path to cached model directory or None if not cached
+        Path to model directory or None if not found
     """
+    # Use ComfyUI models folder if no custom cache_dir specified
+    if cache_dir is None:
+        sdnq_base_dir = get_sdnq_models_dir()
+    else:
+        sdnq_base_dir = cache_dir
+
+    # Check local directory first (new storage location)
+    model_name = repo_id.replace("/", "--")
+    local_model_dir = os.path.join(sdnq_base_dir, model_name)
+
+    if os.path.exists(os.path.join(local_model_dir, "model_index.json")):
+        return local_model_dir
+
+    # Fallback: check old HF cache location for backwards compatibility
     try:
         cached_path = try_to_load_from_cache(
             repo_id=repo_id,
-            filename="model_index.json",
-            cache_dir=cache_dir
+            filename="model_index.json"
         )
         if cached_path and cached_path != "_not_found_":
             return os.path.dirname(cached_path)
     except Exception:
         pass
+
     return None
 
 

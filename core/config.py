@@ -2,8 +2,40 @@
 Configuration helpers for SDNQ integration
 """
 
+import os
 import torch
 from typing import Optional
+from pathlib import Path
+
+
+def get_sdnq_models_dir() -> str:
+    """
+    Get the directory where SDNQ models should be stored.
+
+    Uses ComfyUI's models/diffusers/ folder, creating an 'sdnq' subdirectory.
+    Falls back to a default location if folder_paths is not available.
+
+    Returns:
+        Absolute path to SDNQ models directory
+    """
+    try:
+        import folder_paths
+        # Get ComfyUI's diffusers models folder
+        diffusers_dirs = folder_paths.get_folder_paths("diffusers")
+        if diffusers_dirs and len(diffusers_dirs) > 0:
+            base_dir = diffusers_dirs[0]
+            sdnq_dir = os.path.join(base_dir, "sdnq")
+            os.makedirs(sdnq_dir, exist_ok=True)
+            return sdnq_dir
+    except ImportError:
+        pass
+    except Exception as e:
+        print(f"Warning: Could not access ComfyUI models folder: {e}")
+
+    # Fallback to default location
+    fallback_dir = os.path.expanduser("~/.cache/comfyui/models/diffusers/sdnq")
+    os.makedirs(fallback_dir, exist_ok=True)
+    return fallback_dir
 
 
 def get_dtype_from_string(dtype_str: str) -> torch.dtype:
