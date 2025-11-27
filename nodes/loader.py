@@ -172,11 +172,24 @@ class SDNQModelLoader:
             # The SDNQConfig import above registers SDNQ into diffusers
             print("Loading model pipeline...")
 
-            pipeline = diffusers.AutoPipelineForText2Image.from_pretrained(
-                model_path,
-                torch_dtype=torch_dtype,
-                local_files_only=is_local,
-            )
+            # Try AutoPipeline first, fall back to FluxPipeline for FLUX.2 models
+            try:
+                pipeline = diffusers.AutoPipelineForText2Image.from_pretrained(
+                    model_path,
+                    torch_dtype=torch_dtype,
+                    local_files_only=is_local,
+                )
+            except ValueError as e:
+                # Handle FLUX.2 models that use Flux2Pipeline (not yet in AutoPipeline mapping)
+                if "Flux2Pipeline" in str(e) or "can't find a pipeline" in str(e):
+                    print("AutoPipeline failed, trying FluxPipeline for FLUX.2 compatibility...")
+                    pipeline = diffusers.FluxPipeline.from_pretrained(
+                        model_path,
+                        torch_dtype=torch_dtype,
+                        local_files_only=is_local,
+                    )
+                else:
+                    raise
 
             print(f"Pipeline loaded: {type(pipeline).__name__}")
 

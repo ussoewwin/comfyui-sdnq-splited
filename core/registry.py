@@ -11,9 +11,10 @@ from pathlib import Path
 
 
 # Catalog of pre-quantized SDNQ models from Disty0's HuggingFace collection
-# Organized by model family for easier navigation
+# All entries verified against https://huggingface.co/collections/Disty0/sdnq
+# Last updated: 2025-11-27
 SDNQ_MODEL_CATALOG = {
-    # FLUX Models - Most popular for high-quality generation
+    # FLUX.1 Models - Most popular for high-quality generation (older qint naming)
     "FLUX.1-dev-qint8": {
         "repo_id": "Disty0/FLUX.1-dev-qint8",
         "type": "FLUX",
@@ -25,17 +26,6 @@ SDNQ_MODEL_CATALOG = {
         "description": "FLUX.1-dev 8-bit - Best quality/VRAM balance",
         "priority": 1  # High priority for display
     },
-    "FLUX.1-dev-qint6": {
-        "repo_id": "Disty0/FLUX.1-dev-qint6",
-        "type": "FLUX",
-        "quant_level": "int6",
-        "vram_required": "~9 GB",
-        "vram_gb": 9,
-        "quality": "~97%",
-        "size_gb": "~12 GB",
-        "description": "FLUX.1-dev 6-bit - Great quality, lower VRAM",
-        "priority": 2
-    },
     "FLUX.1-dev-qint4": {
         "repo_id": "Disty0/FLUX.1-dev-qint4",
         "type": "FLUX",
@@ -45,101 +35,46 @@ SDNQ_MODEL_CATALOG = {
         "quality": "~95%",
         "size_gb": "~9 GB",
         "description": "FLUX.1-dev 4-bit - Extreme VRAM savings",
-        "priority": 3
-    },
-    "FLUX.1-schnell-qint8": {
-        "repo_id": "Disty0/FLUX.1-schnell-qint8",
-        "type": "FLUX",
-        "quant_level": "int8",
-        "vram_required": "~12 GB",
-        "vram_gb": 12,
-        "quality": "~99%",
-        "size_gb": "~15 GB",
-        "description": "FLUX.1-schnell 8-bit - Fast generation variant",
-        "priority": 4
+        "priority": 2
     },
 
-    # FLUX.2 Models - Next generation FLUX
-    "FLUX.2-dev-qint8": {
-        "repo_id": "Disty0/FLUX.2-dev-qint8",
-        "type": "FLUX",
-        "quant_level": "int8",
-        "vram_required": "~12 GB",
-        "vram_gb": 12,
-        "quality": "~99%",
-        "size_gb": "~15 GB",
-        "description": "FLUX.2-dev 8-bit - Next-gen FLUX model",
-        "priority": 5
-    },
-    "FLUX.2-dev-qint4": {
-        "repo_id": "Disty0/FLUX.2-dev-qint4",
-        "type": "FLUX",
+    # FLUX.2 Models - Next generation FLUX (new SDNQ naming with SVD)
+    "FLUX.2-dev-SDNQ-uint4": {
+        "repo_id": "Disty0/FLUX.2-dev-SDNQ-uint4-svd-r32",
+        "type": "FLUX2",
         "quant_level": "uint4",
         "vram_required": "~6 GB",
         "vram_gb": 6,
         "quality": "~95%",
         "size_gb": "~9 GB",
-        "description": "FLUX.2-dev 4-bit - Next-gen with extreme savings",
-        "priority": 6
+        "description": "FLUX.2-dev 4-bit SVD - Next-gen FLUX",
+        "priority": 3
     },
 
-    # SD 3.5 Models - Latest Stable Diffusion
-    "SD3.5-Large-qint8": {
-        "repo_id": "Disty0/stable-diffusion-3.5-large-qint8",
-        "type": "SD3.5",
-        "quant_level": "int8",
-        "vram_required": "~10 GB",
-        "vram_gb": 10,
-        "quality": "~99%",
-        "size_gb": "~12 GB",
-        "description": "SD 3.5 Large 8-bit - Latest flagship model",
-        "priority": 7
-    },
-    "SD3.5-Large-Turbo-qint8": {
-        "repo_id": "Disty0/stable-diffusion-3.5-large-turbo-qint8",
-        "type": "SD3.5",
-        "quant_level": "int8",
-        "vram_required": "~10 GB",
-        "vram_gb": 10,
-        "quality": "~99%",
-        "size_gb": "~12 GB",
-        "description": "SD 3.5 Large Turbo 8-bit - Fast inference",
-        "priority": 8
-    },
-    "SD3.5-Medium-qint8": {
-        "repo_id": "Disty0/stable-diffusion-3.5-medium-qint8",
-        "type": "SD3.5",
-        "quant_level": "int8",
+    # Z-Image Models - Latest addition (2025)
+    "Z-Image-Turbo-SDNQ-uint4": {
+        "repo_id": "Disty0/Z-Image-Turbo-SDNQ-uint4-svd-r32",
+        "type": "Z-Image",
+        "quant_level": "uint4",
         "vram_required": "~6 GB",
         "vram_gb": 6,
-        "quality": "~99%",
-        "size_gb": "~8 GB",
-        "description": "SD 3.5 Medium 8-bit - Smaller, faster",
-        "priority": 9
+        "quality": "~95%",
+        "size_gb": "~9 GB",
+        "description": "Z-Image Turbo 4-bit - Fast generation",
+        "priority": 4
     },
 
-    # SDXL Models - Stable and widely compatible
-    "SDXL-base-qint8": {
-        "repo_id": "Disty0/stable-diffusion-xl-base-1.0-qint8",
-        "type": "SDXL",
-        "quant_level": "int8",
-        "vram_required": "~6 GB",
-        "vram_gb": 6,
-        "quality": "~99%",
-        "size_gb": "~7 GB",
-        "description": "SDXL Base 1.0 8-bit - Classic high quality",
-        "priority": 10
-    },
-    "SDXL-base-qint4": {
-        "repo_id": "Disty0/stable-diffusion-xl-base-1.0-qint4",
+    # NoobAI Models - Anime/Illustration focused (SDXL-based)
+    "NoobAI-XL-Vpred-SDNQ-uint4": {
+        "repo_id": "Disty0/NoobAI-XL-Vpred-v1.0-SDNQ-uint4-svd-r128",
         "type": "SDXL",
         "quant_level": "uint4",
         "vram_required": "~4 GB",
         "vram_gb": 4,
         "quality": "~95%",
         "size_gb": "~4 GB",
-        "description": "SDXL Base 1.0 4-bit - Very low VRAM",
-        "priority": 11
+        "description": "NoobAI XL v1.0 4-bit - Anime/illustration",
+        "priority": 5
     },
 }
 
