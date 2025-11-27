@@ -215,7 +215,8 @@ class SDNQModelLoader:
 
             # Wrap pipeline components for ComfyUI compatibility
             print("Wrapping pipeline components for ComfyUI...")
-            model_wrapper, clip_wrapper, vae_wrapper = wrap_pipeline_components(pipeline)
+            model_type = model_info['type'] if model_info else None
+            model_wrapper, clip_wrapper, vae_wrapper = wrap_pipeline_components(pipeline, model_type=model_type)
 
             print(f"{'='*60}")
             print("✓ Model loaded successfully!")

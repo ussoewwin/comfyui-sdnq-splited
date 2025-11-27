@@ -17,20 +17,41 @@ class SDNQModelWrapper:
     This wrapper provides the interface expected by ComfyUI's sampling nodes.
     """
 
-    def __init__(self, pipeline, model_component):
+    def __init__(self, pipeline, model_component, model_type=None):
         """
         Args:
             pipeline: The full diffusers pipeline
             model_component: The transformer or unet component from the pipeline
+            model_type: Explicitly provided model type (e.g. "FLUX", "SDXL")
         """
         self.pipeline = pipeline
         self.model = model_component
-        self.model_type = self._detect_model_type()
+        # Use explicit type if provided, otherwise detect
+        if model_type:
+            self.model_type = self._normalize_model_type(model_type)
+        else:
+            self.model_type = self._detect_model_type()
+
+    def _normalize_model_type(self, model_type: str) -> str:
+        """Normalize registry types to internal types"""
+        if not model_type:
+            return "unknown"
+        model_type = model_type.upper()
+        if "FLUX" in model_type:
+            return "flux"
+        elif "SD3" in model_type:
+            return "sd3"
+        elif "SDXL" in model_type:
+            return "sdxl"
+        return "unknown"
 
     def _detect_model_type(self) -> str:
-        """Detect the type of model (FLUX, SD3, SDXL, etc.)"""
+        """Fallback detection if type not provided"""
         if hasattr(self.pipeline, 'transformer'):
-            # FLUX or SD3 style
+            # Check transformer class name to distinguish Flux vs SD3
+            transformer_class = self.pipeline.transformer.__class__.__name__
+            if "SD3" in transformer_class:
+                return "sd3"
             return "flux"
         elif hasattr(self.pipeline, 'unet'):
             # SDXL/SD1.5 style
@@ -298,12 +319,13 @@ class SDNQVAEWrapper:
         return self.vae
 
 
-def wrap_pipeline_components(pipeline) -> Tuple[SDNQModelWrapper, SDNQCLIPWrapper, SDNQVAEWrapper]:
+def wrap_pipeline_components(pipeline, model_type=None) -> Tuple[SDNQModelWrapper, SDNQCLIPWrapper, SDNQVAEWrapper]:
     """
-    Wrap a diffusers pipeline into ComfyUI-compatible components.
+    Wrap diffusers pipeline components into ComfyUI-compatible objects.
 
     Args:
-        pipeline: A diffusers pipeline (FluxPipeline, StableDiffusion3Pipeline, etc.)
+        pipeline: The loaded diffusers pipeline
+        model_type: Optional explicit model type (e.g. "FLUX", "SDXL")
 
     Returns:
         Tuple of (model_wrapper, clip_wrapper, vae_wrapper) compatible with ComfyUI types
@@ -332,7 +354,7 @@ def wrap_pipeline_components(pipeline) -> Tuple[SDNQModelWrapper, SDNQCLIPWrappe
         raise ValueError("Pipeline missing vae component")
 
     # Create wrappers
-    model_wrapper = SDNQModelWrapper(pipeline, model_component)
+    model_wrapper = SDNQModelWrapper(pipeline, model_component, model_type=model_type)
     clip_wrapper = SDNQCLIPWrapper(pipeline, text_encoder, tokenizer)
     vae_wrapper = SDNQVAEWrapper(vae)
 
