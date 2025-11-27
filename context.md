@@ -49,26 +49,6 @@ python -c "from sdnq import SDNQConfig; print('SDNQ imported successfully')"
 **Issue**: `NameError: name 'model_name' is not defined`
 **Solution**: Removed unnecessary FLUX.2 detection code (see #4)
 **Files**: `nodes/loader.py`
-
-### 4. Unnecessary FLUX.2 Special Handling Removed ✅
-**Issue**: Over-engineered version detection for FLUX.2
-**Solution**: SDNQ handles ALL models automatically through diffusers integration - no special cases needed!
-**Files**: `nodes/loader.py`
-
-### 5. Requirements Updated ✅
-**Issue**: `diffusers>=0.30.0` too old for FLUX.2
-**Solution**: Updated to `diffusers>=0.35.2`
-**Files**: `requirements.txt`
-
-### 6. Flux 2 Pipeline Error Fixed ✅
-**Issue**: `AttributeError: module diffusers has no attribute Flux2Transformer2DModel` and `AutoencoderKLFlux2`
-**Root Cause**: Model was created with diffusers 0.36.0.dev0 (which has Flux2 classes) but user has diffusers 0.35.2 (which only has Flux 1 classes)
-**Solution**: Implemented config patching that loads `model_index.json`, detects Flux2 class names, replaces them with Flux 1 equivalents, and loads from a temporary directory with the patched config
-**Files**: `nodes/loader.py`
-
-### 7. File Size Accuracy Fixed ✅
-**Issue**: Flux 2 model size reported as ~9GB but downloaded ~32GB
-**Solution**: Removed hardcoded `size_gb` estimates from registry entirely; now displays "Unknown" or relies on downloader's dynamic check
 **Files**: `core/registry.py`, `nodes/loader.py`
 
 ### 8. Progress Bar Expectation Managed ✅

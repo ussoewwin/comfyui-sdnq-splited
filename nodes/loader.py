@@ -166,90 +166,16 @@ class SDNQModelLoader:
         print(f"Source: {'Local cached path' if is_local else 'HuggingFace Hub'}")
 
         try:
-            # Load pipeline with SDNQ support
-            # The SDNQConfig import above registers SDNQ into diffusers
-            # SDNQ handles all quantization automatically through diffusers integration
+            # Load pipeline using standard diffusers API
+            # diffusers >= 0.36.0 natively supports Flux2Pipeline, Flux2Transformer2DModel, etc.
             print("Loading model pipeline...")
             print("Note: If the progress bar appears stuck, it is likely verifying files or downloading large chunks. Please wait.")
 
-            # Load model_index.json and check for Flux2 classes (which require diffusers >=0.36)
-            # If found, replace with Flux 1 classes for compatibility with diffusers 0.35.2
-            import json
-            model_index_path = os.path.join(model_path, "model_index.json")
-            
-            if os.path.exists(model_index_path):
-                with open(model_index_path, 'r') as f:
-                    config = json.load(f)
-                
-                # Check if this uses Flux2 classes
-                flux2_classes_map = {
-                    "Flux2Pipeline": "FluxPipeline",
-                    "Flux2Transformer2DModel": "FluxTransformer2DModel",
-                    "AutoencoderKLFlux2": "AutoencoderKL"
-                }
-                
-                needs_patching = False
-                if config.get("_class_name") in flux2_classes_map:
-                    print(f"Detected Flux2 model created with diffusers {config.get('_diffusers_version', 'unknown')}")
-                    print(f"Current diffusers version may not support Flux2 classes. Applying compatibility patch...")
-                    config["_class_name"] = flux2_classes_map[config["_class_name"]]
-                    needs_patching = True
-                
-                # Check transformer and VAE
-                if config.get("transformer") and len(config["transformer"]) >= 2:
-                    if config["transformer"][1] in flux2_classes_map:
-                        config["transformer"][1] = flux2_classes_map[config["transformer"][1]]
-                        needs_patching = True
-                
-                if config.get("vae") and len(config["vae"]) >= 2:
-                    if config["vae"][1] in flux2_classes_map:
-                        config["vae"][1] = flux2_classes_map[config["vae"][1]]
-                        needs_patching = True
-                
-                if needs_patching:
-                    # Save modified config to a temporary location
-                    import tempfile
-                    temp_dir = tempfile.mkdtemp()
-                    temp_config_path = os.path.join(temp_dir, "model_index.json")
-                    with open(temp_config_path, 'w') as f:
-                        json.dump(config, f, indent=2)
-                    
-                    # Copy all other files/folders from model_path to temp_dir
-                    import shutil
-                    for item in os.listdir(model_path):
-                        if item != "model_index.json":
-                            src = os.path.join(model_path, item)
-                            dst = os.path.join(temp_dir, item)
-                            if os.path.isdir(src):
-                                shutil.copytree(src, dst, symlinks=True)
-                            else:
-                                shutil.copy2(src, dst)
-                    
-                    # Load from temp location with patched config
-                    pipeline = diffusers.DiffusionPipeline.from_pretrained(
-                        temp_dir,
-                        torch_dtype=torch_dtype,
-                        local_files_only=True,
-                    )
-                    
-                    # Clean up temp dir
-                    shutil.rmtree(temp_dir)
-                else:
-                    # No patching needed, load normally
-                    pipeline = diffusers.DiffusionPipeline.from_pretrained(
-                        model_path,
-                        torch_dtype=torch_dtype,
-                        local_files_only=is_local,
-                        trust_remote_code=True,
-                    )
-            else:
-                # No model_index.json, load normally
-                pipeline = diffusers.DiffusionPipeline.from_pretrained(
-                    model_path,
-                    torch_dtype=torch_dtype,
-                    local_files_only=is_local,
-                    trust_remote_code=True,
-                )
+            pipeline = diffusers.DiffusionPipeline.from_pretrained(
+                model_path,
+                torch_dtype=torch_dtype,
+                local_files_only=is_local,
+            )
 
 
             print(f"Pipeline loaded: {type(pipeline).__name__}")
