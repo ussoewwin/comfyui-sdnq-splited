@@ -140,7 +140,21 @@ class SDNQCLIPWrapper:
         outputs = self.text_encoder(**inputs)
         
         # Extract embeddings and pooled output
-        cond = outputs.last_hidden_state
+        # Different text encoders have different output formats
+        if hasattr(outputs, 'last_hidden_state'):
+            # Standard output (CLIP, T5, etc.)
+            cond = outputs.last_hidden_state
+        elif hasattr(outputs, 'hidden_states') and outputs.hidden_states is not None:
+            # Some models return hidden_states as a tuple
+            if isinstance(outputs.hidden_states, tuple):
+                cond = outputs.hidden_states[-1]
+            else:
+                cond = outputs.hidden_states
+        elif hasattr(outputs, 'logits'):
+            # Causal LM output (Mistral3, etc.) - use logits as embeddings
+            cond = outputs.logits
+        else:
+            raise AttributeError(f"Text encoder output has no recognizable embedding attribute. Available: {dir(outputs)}")
         
         if hasattr(outputs, 'pooler_output') and outputs.pooler_output is not None:
             pooled = outputs.pooler_output

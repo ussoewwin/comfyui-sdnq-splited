@@ -57,7 +57,7 @@ class SDNQModelLoader:
                     "tooltip": "Enable Triton quantized matmul for faster inference (Linux/WSL only)"
                 }),
                 "cpu_offload": ("BOOLEAN", {
-                    "default": False,
+                    "default": True,
                     "tooltip": "Offload model to CPU RAM to save VRAM (reduces speed, saves 60-70% VRAM)"
                 }),
             },
