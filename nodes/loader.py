@@ -185,10 +185,22 @@ class SDNQModelLoader:
                 # This happens if model_index.json specifies Flux2Pipeline but it's not in the library
                 error_str = str(e)
                 if "Flux2Pipeline" in error_str or "Flux2Transformer2DModel" in error_str:
-                    print(f"Warning: Custom pipeline class not found ({error_str}). Falling back to standard FluxPipeline...")
-                    from diffusers import FluxPipeline
+                    print(f"Warning: Custom pipeline class not found ({error_str}). Falling back to standard FluxPipeline with component override...")
+                    from diffusers import FluxPipeline, FluxTransformer2DModel
+                    
+                    # Manually load the transformer to bypass the "Flux2Transformer2DModel" lookup in model_index.json
+                    print("Loading FluxTransformer2DModel manually...")
+                    transformer = FluxTransformer2DModel.from_pretrained(
+                        model_path,
+                        subfolder="transformer",
+                        torch_dtype=torch_dtype,
+                        local_files_only=is_local,
+                    )
+                    
+                    # Load pipeline with overridden transformer
                     pipeline = FluxPipeline.from_pretrained(
                         model_path,
+                        transformer=transformer,
                         torch_dtype=torch_dtype,
                         local_files_only=is_local,
                     )
