@@ -2,9 +2,10 @@
 # Note: Install from GitHub for latest features
 sdnq>=0.1.0
 
-# Diffusers library - MUST install from git for Flux 2 / Z-Image support
-# Install via: pip install git+https://github.com/huggingface/diffusers.git
-# Note: PyPI version does not yet include Flux 2, Z-Image, and other latest models
+# Diffusers and transformers
+# Required: diffusers>=0.36.0 for FLUX.2, Z-Image, video, and multimodal models
+diffusers>=0.36.0
+transformers>=4.40.0
 
 # Transformers for text encoding (latest stable)
 transformers>=4.57.0
