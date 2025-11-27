@@ -128,7 +128,17 @@ class SDNQModelLoader:
             model_info = get_model_info(model_selection)
             model_path = repo_id
 
-            print("\n" + "="*60)
+            print(f"Selected: {model_selection}")
+            if model_info:
+                print(f"Type: {model_info['type']}")
+                print(f"Quantization: {model_info['quant_level']}")
+                print(f"VRAM Required: {model_info['vram_required']}")
+                print(f"Quality: {model_info['quality']}")
+                print(f"Download Size: {model_info.get('size_gb', 'Unknown')}")
+
+
+            # Check if already cached
+            is_cached = check_model_cached(repo_id)
             if is_cached:
                 print(f"✓ Model is already cached")
                 cached_path = get_cached_model_path(repo_id)
@@ -162,16 +172,6 @@ class SDNQModelLoader:
             print("Loading model pipeline...")
             print("Note: If the progress bar appears stuck, it is likely verifying files or downloading large chunks. Please wait.")
 
-            # Monkeypatch/Alias Flux2 classes to Flux classes if they don't exist
-            # This fixes the "AttributeError: module diffusers has no attribute Flux2Transformer2DModel"
-            if not hasattr(diffusers, "Flux2Pipeline") and hasattr(diffusers, "FluxPipeline"):
-                print("Patching diffusers: Aliasing Flux2Pipeline -> FluxPipeline")
-                diffusers.Flux2Pipeline = diffusers.FluxPipeline
-            
-            if not hasattr(diffusers, "Flux2Transformer2DModel") and hasattr(diffusers, "FluxTransformer2DModel"):
-                print("Patching diffusers: Aliasing Flux2Transformer2DModel -> FluxTransformer2DModel")
-                diffusers.Flux2Transformer2DModel = diffusers.FluxTransformer2DModel
-
             # Use DiffusionPipeline to support custom pipelines like Flux2Pipeline
             try:
                 pipeline = diffusers.DiffusionPipeline.from_pretrained(
@@ -180,11 +180,12 @@ class SDNQModelLoader:
                     local_files_only=is_local,
                     trust_remote_code=True, # Required for custom pipelines like Flux 2
                 )
-            except AttributeError as e:
-                # Fallback for missing Flux2Pipeline in diffusers module
+            except (AttributeError, ValueError) as e:
+                # Fallback for missing Flux2Pipeline/Flux2Transformer2DModel in diffusers module
                 # This happens if model_index.json specifies Flux2Pipeline but it's not in the library
-                if "Flux2Pipeline" in str(e):
-                    print("Warning: Flux2Pipeline not found in diffusers, falling back to FluxPipeline...")
+                error_str = str(e)
+                if "Flux2Pipeline" in error_str or "Flux2Transformer2DModel" in error_str:
+                    print(f"Warning: Custom pipeline class not found ({error_str}). Falling back to standard FluxPipeline...")
                     from diffusers import FluxPipeline
                     pipeline = FluxPipeline.from_pretrained(
                         model_path,

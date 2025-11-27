@@ -62,7 +62,7 @@ python -c "from sdnq import SDNQConfig; print('SDNQ imported successfully')"
 
 ### 6. Flux 2 Pipeline Error Fixed ✅
 **Issue**: `AttributeError: module diffusers has no attribute Flux2Transformer2DModel`
-**Solution**: Implemented aliasing of `Flux2Pipeline` and `Flux2Transformer2DModel` to their Flux counterparts in `nodes/loader.py` before loading
+**Solution**: Implemented robust fallback to `FluxPipeline` when custom Flux 2 classes are missing, avoiding global monkeypatching.
 **Files**: `nodes/loader.py`
 
 ### 7. File Size Accuracy Fixed ✅
