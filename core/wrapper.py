@@ -99,7 +99,7 @@ class SDNQCLIPWrapper:
         else:
             raise NotImplementedError(f"Tokenizer type {type(self.tokenizer)} not supported")
 
-    def encode_from_tokens(self, tokens, return_pooled=False, **kwargs):
+    def encode_from_tokens(self, tokens, return_pooled=False, return_dict=False, **kwargs):
         """
         Encode tokens to embeddings.
         
@@ -107,7 +107,8 @@ class SDNQCLIPWrapper:
         
         Args:
             tokens: Tokenized input
-            return_pooled: Whether to return pooled output
+            return_pooled: Whether to return pooled output (bool or "unprojected")
+            return_dict: Whether to return a dictionary instead of tuple
             **kwargs: Additional encoding options
         
         Returns:
@@ -125,17 +126,58 @@ class SDNQCLIPWrapper:
         # Encode using text encoder
         outputs = self.text_encoder(**inputs)
         
-        if return_pooled:
-            # Return both sequence output and pooled output
-            if hasattr(outputs, 'pooler_output'):
-                return outputs.last_hidden_state, outputs.pooler_output
-            elif hasattr(outputs, 'pooled_output'):
-                return outputs.last_hidden_state, outputs.pooled_output
-            else:
-                # No pooled output, return hidden state twice
-                return outputs.last_hidden_state, outputs.last_hidden_state[:, 0]
+        # Extract embeddings and pooled output
+        cond = outputs.last_hidden_state
+        
+        if hasattr(outputs, 'pooler_output') and outputs.pooler_output is not None:
+            pooled = outputs.pooler_output
+        elif hasattr(outputs, 'pooled_output') and outputs.pooled_output is not None:
+            pooled = outputs.pooled_output
         else:
-            return outputs.last_hidden_state
+            # No pooled output, use first token as fallback
+            pooled = cond[:, 0]
+        
+        # Return based on requested format
+        if return_dict:
+            out = {"cond": cond, "pooled_output": pooled}
+            return out
+        elif return_pooled:
+            return cond, pooled
+        else:
+            return cond
+
+    def encode_from_tokens_scheduled(self, tokens, unprojected=False, add_dict=None, show_pbar=True):
+        """
+        Encode tokens with optional scheduling support.
+        
+        This matches ComfyUI's CLIP.encode_from_tokens_scheduled() interface.
+        For diffusers models, we don't have the scheduling/hooks infrastructure,
+        so we just call encode_from_tokens and format the output appropriately.
+        
+        Args:
+            tokens: Tokenized input
+            unprojected: Whether to use unprojected pooled output
+            add_dict: Additional dictionary to merge into output
+            show_pbar: Whether to show progress bar (ignored for simple encoding)
+        
+        Returns:
+            List of [cond, pooled_dict] pairs (ComfyUI format)
+        """
+        if add_dict is None:
+            add_dict = {}
+        
+        # Encode tokens
+        return_pooled = "unprojected" if unprojected else True
+        pooled_dict = self.encode_from_tokens(tokens, return_pooled=return_pooled, return_dict=True)
+        
+        # Extract cond and create output format
+        cond = pooled_dict.pop("cond")
+        
+        # Merge in any additional dict items
+        pooled_dict.update(add_dict)
+        
+        # Return in ComfyUI's expected format: list of [cond, pooled_dict] pairs
+        return [[cond, pooled_dict]]
 
     def encode(self, text: str) -> torch.Tensor:
         """
