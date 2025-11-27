@@ -68,74 +68,51 @@ pip install git+https://github.com/huggingface/diffusers.git
 
 ---
 
-## 🐛 Active Bugs Being Fixed (2025-11-27 - Session 3)
+## ✅ PROPER FIX IMPLEMENTED (2025-11-27 - Session 3)
 
-### 1. FLUX.2 Loading Failure: Missing x_embedder.bias ⚠️ IN PROGRESS
+### Switched from State Dict Extraction to Wrapper Approach
 
-**Issue**: ComfyUI's native loader expects `x_embedder.bias` key but SDNQ models don't have it
+**What Was Wrong**: Trying to force SDNQ quantized models through ComfyUI's native loaders
+- Extracted state dicts from diffusers pipeline components
+- Tried to pass to `comfy.sd.load_diffusion_model_state_dict()`
+- Added bias injection hacks to fix missing keys
+- All of this was fundamentally wrong for SDNQ models
+
+**The Problem**:
 ```python
-KeyError: 'x_embedder.bias'
-File "D:\comfy\comfy\model_detection.py", line 1010, in convert_diffusers_mmdit
-    hidden_size = state_dict["x_embedder.bias"].shape[0]
+KeyError: 'x_embedder.bias'  # ComfyUI expects standard checkpoint format
+RuntimeError: tensor size mismatch  # Quantized weights incompatible with bias
 ```
 
-**Root Cause**:
-- SDNQ quantized models may have missing bias terms (removed during quantization or architecture doesn't include them)
-- ComfyUI's `load_diffusion_model_state_dict()` expects standard checkpoint format
-- Model detection code in ComfyUI looks for specific keys to determine architecture
+**PROPER FIX**: Use wrapper approach (as originally planned in CLAUDE.md)
+- **REMOVED** (179 lines of hacks):
+  - State dict extraction from pipeline components
+  - Bias injection for missing keys
+  - ComfyUI's `load_diffusion_model_state_dict()` calls
+  - `_extract_clip_state_dicts()` helper method
+  - `comfy.sd` import
 
-**Solution Implemented**:
-- Added code to inject missing bias terms as zeros before passing to ComfyUI loader
-- Checks for: `x_embedder.bias`, `context_embedder.bias`, `t_embedder.bias`, `y_embedder.bias`
-- Creates zero-initialized bias tensors with correct shapes derived from weight tensors
+- **ADDED** (32 lines of proper code):
+  - Use `wrap_pipeline_components()` from `core/wrapper.py`
+  - Keep diffusers pipeline intact with quantized weights
+  - Apply SDNQ optimizations directly to pipeline components
+  - Return wrapped MODEL/CLIP/VAE that implement ComfyUI interfaces
 
-**Files Modified**:
-- `nodes/loader.py`: Added bias injection code at lines 287-304
+**Why This Is Better**:
+- ✅ No monkeypatching or hacks
+- ✅ Piggybacks on existing diffusers code (current versions)
+- ✅ SDNQ quantized weights preserved in original format
+- ✅ Wrappers implement proper ComfyUI interfaces (tokenize, encode_from_tokens, etc.)
+- ✅ Minimal maintenance required
+- ✅ Aligns with original CLAUDE.md architecture plan
 
-**Status**: ⚠️ Fix implemented, needs testing
+**Pre-load Cleanup**:
+- Runs before EACH model load (defensive cleanup)
+- Clears gc, CUDA cache, torch dynamo state
+- Ensures clean state even after failures
+- Does NOT affect other workflows (only cleans before this node runs)
 
-**Alternative Approach** (if bias fix doesn't work):
-- Use diffusers pipeline components directly (core/wrapper.py approach)
-- Don't extract state dicts, wrap pipeline instead
-- This is more aligned with original architecture plan
-
-### 2. FLUX.1 Hanging After FLUX.2 Failure ⚠️ IN PROGRESS
-
-**Issue**: After FLUX.2 load fails, FLUX.1 hangs at 29% during pipeline loading
-```
-Loading pipeline components...:  29%|...| 2/7 [00:00<00:02,  2.36it/s]
-```
-Hangs forever, no CPU/RAM/VRAM usage
-
-**Root Cause**:
-- Previous failed load leaves resources in bad state
-- Possible causes:
-  - File locks from previous load
-  - CUDA context not cleared
-  - diffusers internal state pollution
-  - Torch compile cache corruption
-
-**Solution Implemented**:
-- Added pre-load cleanup before each model load (lines 233-244)
-- Improved cleanup_resources() with:
-  - Multiple gc.collect() passes
-  - CUDA synchronize before empty_cache
-  - Reset peak memory stats
-  - More aggressive torch dynamo reset
-- Added flush=True to print statements to ensure proper output
-
-**Files Modified**:
-- `nodes/loader.py`:
-  - Added pre-load cleanup (lines 231-244)
-  - Improved cleanup_resources() (lines 119-144)
-  - Added flush=True to pipeline loading prints
-
-**Status**: ⚠️ Fix implemented, needs testing
-
-**Next Steps**:
-1. Test FLUX.2 load with bias fix
-2. Test FLUX.1 load after FLUX.2 failure to verify cleanup works
-3. If still hanging, may need to investigate diffusers internals or add process isolation
+**Status**: ✅ Properly implemented, ready for testing
 
 ---
 
