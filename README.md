@@ -1,5 +1,11 @@
 # ComfyUI-SDNQ
 
+> ⚠️ **WORK IN PROGRESS - CURRENT VERSION IS BROKEN** ⚠️
+>
+> This node pack is undergoing architectural redesign. The current wrapper-based approach is fundamentally incompatible with ComfyUI's ModelPatcher system. See [Issue #14](https://github.com/EnragedAntelope/comfyui-sdnq/issues/14) for details.
+>
+> **Status**: Core functionality needs to be rewritten. Do not use in production.
+
 **Load SDNQ quantized models in ComfyUI with 50-75% VRAM savings!**
 
 This custom node pack enables loading [SDNQ (SD.Next Quantization)](https://github.com/Disty0/sdnq) models in ComfyUI workflows. Run large models like FLUX.2, FLUX.1, Qwen-Image, Z-Image, HunyuanImage3, and more on consumer hardware with significantly reduced VRAM requirements while maintaining image quality.
