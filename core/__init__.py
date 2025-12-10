@@ -4,11 +4,9 @@ SDNQ Core Package
 Contains core functionality for SDNQ integration with ComfyUI:
 - Model registry and catalog
 - HuggingFace Hub downloader
-- ComfyUI type wrappers (MODEL, CLIP, VAE)
 - Configuration helpers
 """
 
-from .wrapper import wrap_pipeline_components
 from .config import get_dtype_from_string, get_device_map
 from .registry import (
     get_model_catalog,
@@ -29,8 +27,6 @@ from .downloader import (
 )
 
 __all__ = [
-    # Wrapper
-    'wrap_pipeline_components',
     # Config
     'get_dtype_from_string',
     'get_device_map',
