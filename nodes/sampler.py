@@ -454,7 +454,9 @@ class SDNQSampler:
             # diffusers still uses torch_dtype as the official parameter in 0.36.x
             # See: https://github.com/huggingface/peft/issues/2835
             with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", message="`torch_dtype` is deprecated")
+                # Filter both message pattern and FutureWarning category for comprehensive suppression
+                warnings.filterwarnings("ignore", message=".*torch_dtype.*", category=FutureWarning)
+                warnings.filterwarnings("ignore", message=".*torch_dtype.*")
                 pipeline = DiffusionPipeline.from_pretrained(
                     model_path,
                     torch_dtype=torch_dtype,
