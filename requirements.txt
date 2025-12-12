@@ -6,7 +6,7 @@ sdnq>=0.1.0
 # IMPORTANT: diffusers 0.36.0 not yet on PyPI - install from GitHub:
 #   pip install git+https://github.com/huggingface/diffusers.git
 # Or wait for PyPI release and use: diffusers>=0.36.0
-diffusers>=0.35.0
+diffusers>=0.36.0
 
 # Transformers for text encoding
 transformers>=4.40.0
