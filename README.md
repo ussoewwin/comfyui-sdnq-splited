@@ -14,12 +14,13 @@ This custom node pack enables running [SDNQ (SD.Next Quantization)](https://gith
 
 > **SDNQ is developed by [Disty0](https://github.com/Disty0)** - this node pack provides ComfyUI integration.
 
-## Differences from Original Repository
+## Modular Node Structure
 
-This fork focuses on providing a **modular node structure with split functionality**, while the original repository ([EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq)) uses an all-in-one sampler approach:
+This fork provides a **modular node structure with split functionality**. The following nodes are implemented:
 
 - **SDNQ Model Loader**: Dedicated node for loading models
 - **SDNQ LoRA Loader**: Dedicated node for loading LoRAs
+- **SDNQ VAE Encode**: Dedicated node for encoding images to latent space (compatible with diffusers VAE)
 - **SDNQ Sampler / SDNQ Sampler V2**: Dedicated nodes for image generation
 
 This allows you to use SDNQ models with the same workflow structure as standard ComfyUI workflows (Model Load → LoRA Apply → Sampling).
