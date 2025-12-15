@@ -35,15 +35,6 @@ This allows you to use SDNQ models with the same workflow structure as standard 
 
 ## Installation
 
-### Method 1: ComfyUI Manager (Recommended)
-
-1. Install [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager)
-2. Search for "SDNQ" in the manager
-3. Click Install
-4. Restart ComfyUI
-
-### Method 2: Manual Installation
-
 ```bash
 cd ComfyUI/custom_nodes/
 git clone https://github.com/ussoewwin/comfyui-sdnq-splited.git
