@@ -9,6 +9,9 @@ This node pack enables loading SDNQ models with 50-75% VRAM savings while mainta
 """
 
 from .nodes.sampler import SDNQSampler
+from .nodes.samplerv2 import SDNQSamplerV2
+from .nodes.model_loader import SDNQModelLoader
+from .nodes.lora_loader import SDNQLoraLoader
 
 # ============================================================================
 # V1 API - Node Registration (ComfyUI Standard)
@@ -16,10 +19,16 @@ from .nodes.sampler import SDNQSampler
 
 NODE_CLASS_MAPPINGS = {
     "SDNQSampler": SDNQSampler,
+    "SDNQSamplerV2": SDNQSamplerV2,
+    "SDNQModelLoader": SDNQModelLoader,
+    "SDNQLoraLoader": SDNQLoraLoader,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SDNQSampler": "SDNQ Sampler",
+    "SDNQSamplerV2": "SDNQ Sampler V2",
+    "SDNQModelLoader": "SDNQ Model Loader",
+    "SDNQLoraLoader": "SDNQ LoRA Loader",
 }
 
 # ============================================================================
