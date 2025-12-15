@@ -205,6 +205,12 @@ A detailed comparison document explaining the architectural and functional diffe
 
 See: [COMPARISON_TABLE.md](md/COMPARISON_TABLE.md)
 
+### Standard ComfyUI LoRA Loader vs SDNQ LoRA Loader Comparison
+
+A comprehensive technical explanation comparing the standard ComfyUI LoRA Loader and SDNQ LoRA Loader, covering architecture differences (ModelPatcher vs DiffusionPipeline), LoRA application mechanisms (patches vs adapters), multiple LoRA processing methods (sequential vs parallel), and detailed implementation comparisons.
+
+See: [LoRA_Loader_Comparison_Standard_vs_SDNQ_EN.md](md/LoRA_Loader_Comparison_Standard_vs_SDNQ_EN.md)
+
 ---
 
 ## Contributing
