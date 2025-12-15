@@ -12,6 +12,7 @@ from .nodes.sampler import SDNQSampler
 from .nodes.samplerv2 import SDNQSamplerV2
 from .nodes.model_loader import SDNQModelLoader
 from .nodes.lora_loader import SDNQLoraLoader
+from .nodes.vae_encode import SDNQVAEEncode
 
 # ============================================================================
 # V1 API - Node Registration (ComfyUI Standard)
@@ -22,6 +23,7 @@ NODE_CLASS_MAPPINGS = {
     "SDNQSamplerV2": SDNQSamplerV2,
     "SDNQModelLoader": SDNQModelLoader,
     "SDNQLoraLoader": SDNQLoraLoader,
+    "SDNQVAEEncode": SDNQVAEEncode,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -29,6 +31,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SDNQSamplerV2": "SDNQ Sampler V2",
     "SDNQModelLoader": "SDNQ Model Loader",
     "SDNQLoraLoader": "SDNQ LoRA Loader",
+    "SDNQVAEEncode": "SDNQ VAE Encode",
 }
 
 # ============================================================================

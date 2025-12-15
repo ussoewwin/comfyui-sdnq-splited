@@ -55,13 +55,6 @@ class ComfyVAEWrapper:
         # ComfyUI's VAEEncode expects float32 input, so VAE should also be float32
         self.vae = vae.to(dtype=torch.float32)
     
-    def __getattr__(self, name):
-        """
-        Forward attribute access to the wrapped VAE so that underlying modules
-        (e.g., bn in FLUX VAE) remain accessible.
-        """
-        return getattr(self.vae, name)
-
     def encode(self, pixels):
         """
         Encode pixels to latent space.
@@ -104,7 +97,7 @@ class ComfyVAEWrapper:
         # Return in [N, C, H, W] format (ComfyUI expects this)
         return latent
     
-    def decode(self, samples, *args, **kwargs):
+    def decode(self, samples):
         """
         Decode latent to pixels.
         
@@ -114,8 +107,8 @@ class ComfyVAEWrapper:
         Returns:
             Tensor in [N, H, W, C] format (ComfyUI format)
         """
-        # Call diffusers VAE decode method (pass through extra args/kwargs such as return_dict)
-        result = self.vae.decode(samples, *args, **kwargs)
+        # Call diffusers VAE decode method
+        result = self.vae.decode(samples)
         
         # Extract pixels from result
         if isinstance(result, dict):
@@ -123,8 +116,6 @@ class ComfyVAEWrapper:
                 pixels = result["sample"]
             else:
                 pixels = next(iter(result.values()))
-        elif isinstance(result, (list, tuple)):
-            pixels = result[0]
         else:
             pixels = result
         

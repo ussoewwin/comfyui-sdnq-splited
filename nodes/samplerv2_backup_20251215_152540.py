@@ -16,9 +16,7 @@ import torch
 import numpy as np
 from PIL import Image
 import traceback
-from typing import Tuple, Optional
-import secrets
-import inspect
+from typing import Tuple
 
 # SDNQ import - registers SDNQ support into diffusers
 from sdnq import SDNQConfig
@@ -171,8 +169,7 @@ class SDNQSamplerV2:
                     "default": 0,
                     "min": 0,
                     "max": 0xffffffffffffffff,
-                    "control_after_generate": True,
-                    "tooltip": "The random seed used for creating the noise. Seed=0 will randomize each run and update this field after generation."
+                    "tooltip": "Random seed for reproducible generation. Same seed + settings = same image."
                 }),
 
                 "scheduler": (scheduler_list, {
@@ -308,22 +305,6 @@ class SDNQSamplerV2:
         if "samples" not in latent_image:
             raise ValueError("latent_image must contain 'samples' key")
 
-        pipeline_type = type(pipeline).__name__
-        is_flux_family = pipeline_type in ["Flux2Pipeline", "FluxPipeline", "FluxSchnellPipeline"]
-        call_params = set()
-        try:
-            call_params = set(inspect.signature(pipeline.__call__).parameters.keys())
-        except Exception:
-            call_params = set()
-        supports_image_arg = ("image" in call_params)
-
-        # For non-FLUX pipelines, if VAE is provided via latent, apply it to pipeline to keep encode/decode consistent.
-        if (not is_flux_family) and isinstance(latent_image, dict) and latent_image.get("vae") is not None:
-            try:
-                pipeline.vae = latent_image["vae"]
-            except Exception:
-                pass
-
         samples = latent_image["samples"]
         if not isinstance(samples, torch.Tensor):
             raise ValueError("latent_image['samples'] must be a torch.Tensor")
@@ -370,229 +351,30 @@ class SDNQSamplerV2:
                 
                 print(f"[SDNQ Sampler V2] VRAM before generation: {vram_used_before_gb:.2f}GB used, {vram_free_before_gb:.2f}GB free")
             
-            # Create generator for reproducible generation (match pipeline execution device when possible)
-            generator_device = getattr(pipeline, "_execution_device", None)
-            if generator_device is None and hasattr(pipeline, "device"):
-                generator_device = pipeline.device
-            if generator_device is None:
-                generator_device = "cuda" if torch.cuda.is_available() else "cpu"
-            generator = torch.Generator(device=generator_device).manual_seed(seed)
+            # Create generator for reproducible generation
+            generator = torch.Generator(device="cuda").manual_seed(seed)
+
+            # Adjust steps based on denoise strength
+            # denoise < 1.0 means less denoising, so we reduce effective steps
+            # For denoise = 1.0, use original steps (no change from before)
+            if denoise < 1.0:
+                effective_steps = max(1, int(steps * denoise))
+                print(f"[SDNQ Sampler V2] Denoise {denoise} applied: {steps} steps -> {effective_steps} effective steps")
+            else:
+                effective_steps = steps
             
             # Build pipeline call kwargs
             pipeline_kwargs = {
                 "prompt": prompt,
-                "num_inference_steps": steps,
+                "num_inference_steps": effective_steps,
                 "guidance_scale": cfg,
                 "width": width,
                 "height": height,
                 "generator": generator,
             }
 
-            # i2i handling
-            # - FLUX family pipelines: use `image=` conditioning (PIL). For Flux2 img2img we also initialize `latents`
-            #   from the input image and use `sigmas` to control denoise strength.
-            # - Other pipelines: pass `latents=` and `strength=` when available.
-            strength = None
-            try:
-                strength = float(denoise)
-                if strength < 0.0:
-                    strength = 0.0
-                elif strength > 1.0:
-                    strength = 1.0
-            except Exception:
-                strength = None
-
-            def _tensor_to_pil_rgb(t: torch.Tensor) -> Image.Image:
-                # Expect ComfyUI IMAGE tensor: [N,H,W,C] float 0..1 (or -1..1), C>=3
-                t0 = t
-                if t0.dim() == 4:
-                    t0 = t0[0]
-                if t0.dim() != 3:
-                    raise ValueError(f"unexpected tensor shape for image: {tuple(t.shape)}")
-                # NHWC
-                if t0.shape[-1] >= 3:
-                    x = t0[:, :, :3]
-                # NCHW -> HWC
-                elif t0.shape[0] >= 3:
-                    x = t0[:3, :, :].permute(1, 2, 0)
-                else:
-                    raise ValueError(f"unexpected channel layout for image: {tuple(t0.shape)}")
-                x = x.detach().cpu().to(torch.float32)
-                # Normalize if looks like [-1,1]
-                try:
-                    mn = float(x.min().item())
-                    mx = float(x.max().item())
-                    if mn < 0.0 and mx <= 1.0:
-                        x = (x + 1.0) / 2.0
-                except Exception:
-                    pass
-                x = torch.clamp(x, 0.0, 1.0).numpy()
-                x = (x * 255.0).round().astype(np.uint8)
-                return Image.fromarray(x, mode="RGB")
-
-            def _decode_latents_to_pil(latents: torch.Tensor) -> Optional[Image.Image]:
-                # Prefer latent-provided VAE; fallback to pipeline.vae
-                vae_obj = None
-                if isinstance(latent_image, dict) and latent_image.get("vae") is not None:
-                    vae_obj = latent_image.get("vae")
-                elif hasattr(pipeline, "vae") and pipeline.vae is not None:
-                    vae_obj = pipeline.vae
-                if vae_obj is None or not hasattr(vae_obj, "decode"):
-                    return None
-                try:
-                    decoded = vae_obj.decode(latents)
-                except Exception:
-                    # Some wrappers keep the actual VAE at .vae
-                    try:
-                        if hasattr(vae_obj, "vae") and hasattr(vae_obj.vae, "decode"):
-                            decoded = vae_obj.vae.decode(latents)
-                        else:
-                            return None
-                    except Exception:
-                        return None
-
-                # Handle common return shapes/containers
-                if isinstance(decoded, dict):
-                    for k in ("pixels", "images", "image", "samples"):
-                        if k in decoded:
-                            decoded = decoded[k]
-                            break
-                    else:
-                        decoded = next(iter(decoded.values()))
-                if hasattr(decoded, "sample"):
-                    try:
-                        decoded = decoded.sample
-                    except Exception:
-                        pass
-                if isinstance(decoded, (list, tuple)) and len(decoded) > 0:
-                    decoded = decoded[0]
-                if not isinstance(decoded, torch.Tensor):
-                    return None
-                return _tensor_to_pil_rgb(decoded)
-
-            # i2i: if pipeline supports `image`, prefer that (more reliable than `latents` across diffusers).
-            # - For Flux family, `image` is effectively required for i2i.
-            # - For non-Flux img2img pipelines, `image` + `strength` is standard.
-            pil_cond = None
-            if isinstance(latent_image, dict) and latent_image.get("pixels") is not None:
-                try:
-                    px = latent_image["pixels"]
-                    if isinstance(px, torch.Tensor):
-                        pil_cond = _tensor_to_pil_rgb(px)
-                except Exception as e:
-                    print(f"[SDNQ Sampler V2] Warning: failed to convert pixels to PIL: {e}")
-            if pil_cond is None and isinstance(latent_image, dict) and latent_image.get("vae") is not None:
-                try:
-                    pil_cond = _decode_latents_to_pil(samples)
-                except Exception as e:
-                    print(f"[SDNQ Sampler V2] Warning: failed to decode latents to PIL: {e}")
-
-            if supports_image_arg and pil_cond is not None and (("vae" in latent_image) or (latent_image.get("pixels") is not None)):
-                pipeline_kwargs["image"] = pil_cond
-                # When conditioning on an init image, keep width/height consistent with that image.
-                # Some pipelines (notably Flux) can behave incorrectly if width/height disagree with the provided image.
-                try:
-                    pipeline_kwargs["width"] = int(pil_cond.size[0])
-                    pipeline_kwargs["height"] = int(pil_cond.size[1])
-                except Exception:
-                    pass
-                # Flux2 img2img: start from the encoded image latents (not pure noise), then add noise according to denoise.
-                # This is required to avoid "complete noise" results where the init image isn't actually used as a starting point.
-                flux_latent_init_ok = False
-                if is_flux_family and pipeline_type in ["Flux2Pipeline", "FluxPipeline"] and strength is not None:
-                    try:
-                        # Build a sigma schedule that keeps the user-requested step count stable.
-                        # In flow-matching, sigma directly controls the mixing ratio:
-                        #   x_t = sigma * noise + (1 - sigma) * x0
-                        req_steps = int(steps)
-                        if req_steps < 1:
-                            req_steps = 1
-                        # Use 0.0 terminal sigma so low denoise can truly stay close to the init image.
-                        # (Using 1/steps creates a "noise floor" that can make denoise feel inverted at low step counts.)
-                        sigma_end = 0.0
-                        sigma_start = float(strength)
-                        if sigma_start < sigma_end:
-                            sigma_start = sigma_end
-                        if sigma_start > 1.0:
-                            sigma_start = 1.0
-                        sigmas = np.linspace(sigma_start, sigma_end, req_steps, dtype=np.float32).tolist()
-                        pipeline_kwargs["sigmas"] = sigmas
-
-                        # Prepare image tensor exactly like the pipeline does
-                        img_w, img_h = pil_cond.size
-                        if img_w * img_h > 1024 * 1024:
-                            try:
-                                pil_cond = pipeline.image_processor._resize_to_target_area(pil_cond, 1024 * 1024)
-                                pipeline_kwargs["image"] = pil_cond
-                                img_w, img_h = pil_cond.size
-                            except Exception:
-                                pass
-
-                        multiple_of = int(getattr(pipeline, "vae_scale_factor", 16)) * 2
-                        if multiple_of > 0:
-                            img_w = (img_w // multiple_of) * multiple_of
-                            img_h = (img_h // multiple_of) * multiple_of
-                        if img_w <= 0 or img_h <= 0:
-                            img_w, img_h = pil_cond.size
-
-                        image_tensor = pipeline.image_processor.preprocess(
-                            pil_cond, height=img_h, width=img_w, resize_mode="crop"
-                        )
-                        image_tensor = image_tensor.to(device=generator_device, dtype=pipeline.vae.dtype)
-
-                        # Encode to Flux2 latent space (unpacked shape [B, 128, H', W'])
-                        x0 = pipeline._encode_vae_image(image=image_tensor, generator=generator)
-
-                        # Set scheduler timesteps once so we can add noise at the correct starting sigma
-                        from diffusers.pipelines.flux2.pipeline_flux2 import retrieve_timesteps, compute_empirical_mu
-
-                        # image_seq_len equals packed latent sequence length (H' * W')
-                        token_h = max(1, int(img_h // multiple_of))
-                        token_w = max(1, int(img_w // multiple_of))
-                        image_seq_len = int(token_h * token_w)
-                        mu = compute_empirical_mu(image_seq_len=image_seq_len, num_steps=req_steps)
-
-                        timesteps, _ = retrieve_timesteps(
-                            pipeline.scheduler, req_steps, generator_device, sigmas=sigmas, mu=mu
-                        )
-                        t0 = timesteps[0].expand(x0.shape[0]).to(device=x0.device)
-                        noise = torch.randn(x0.shape, generator=generator, device=x0.device, dtype=x0.dtype)
-                        x_t = pipeline.scheduler.scale_noise(sample=x0, timestep=t0, noise=noise)
-
-                        # Pass img2img starting latents (pipeline will pack internally)
-                        pipeline_kwargs["latents"] = x_t
-                        flux_latent_init_ok = True
-                    except Exception as e:
-                        print(f"[SDNQ Sampler V2] Warning: Flux img2img latent init failed, falling back to conditioning-only: {e}")
-                # IMPORTANT:
-                # If we successfully initialize `latents` from the input image, do NOT also pass `image=`.
-                # Flux2 treats `image` as additional reference conditioning tokens; keeping it makes denoise appear
-                # "stuck" (0.2 and 0.8 look similar) because the reference conditioning dominates.
-                if flux_latent_init_ok:
-                    pipeline_kwargs.pop("image", None)
-                if (not is_flux_family) and strength is not None and ("strength" in call_params):
-                    pipeline_kwargs["strength"] = strength
-            elif (not is_flux_family) and isinstance(latent_image, dict) and latent_image.get("vae") is not None:
-                # Fallback path for pipelines that don't expose `image` but accept `latents` (rare).
-                try:
-                    init_latents = samples
-                    target_dtype = None
-                    for attr in ("unet", "transformer"):
-                        m = getattr(pipeline, attr, None)
-                        if m is not None and hasattr(m, "dtype"):
-                            target_dtype = m.dtype
-                            break
-                    if target_dtype is not None and init_latents.dtype != target_dtype:
-                        init_latents = init_latents.to(dtype=target_dtype)
-                    init_latents = init_latents.to(device=generator_device)
-                    if "latents" in call_params:
-                        pipeline_kwargs["latents"] = init_latents
-                    if strength is not None and ("strength" in call_params):
-                        pipeline_kwargs["strength"] = strength
-                except Exception as e:
-                    print(f"[SDNQ Sampler V2] Warning: failed to set i2i latents/strength: {e}")
-
             # Check if pipeline supports negative_prompt
+            pipeline_type = type(pipeline).__name__
             supports_negative_prompt = pipeline_type not in ["Flux2Pipeline", "FluxPipeline", "FluxSchnellPipeline"]
             
             if supports_negative_prompt and negative_prompt and negative_prompt.strip():
@@ -612,32 +394,32 @@ class SDNQSamplerV2:
                 except Exception as e:
                     print(f"[SDNQ Sampler V2] Warning: Could not patch VAE.decode: {e}")
 
-            # Patch retrieve_timesteps for FLUX pipelines:
-            # - remove `mu` when scheduler doesn't support it
-            # (denoise for Flux img2img is handled via `sigmas` + `latents` initialization above)
+            # Patch retrieve_timesteps for FLUX.2 pipelines if scheduler doesn't support mu
+            # FLUX.2 pipelines try to pass mu parameter, but non-FlowMatch schedulers don't support it
             original_retrieve_timesteps = None
             if pipeline_type in ["Flux2Pipeline", "FluxPipeline"]:
                 try:
                     from diffusers.pipelines.flux2.pipeline_flux2 import retrieve_timesteps
-                    import diffusers.pipelines.flux2.pipeline_flux2 as flux2_module
+                    import inspect
                     
                     # Check if current scheduler supports mu parameter
                     scheduler_supports_mu = isinstance(pipeline.scheduler, FlowMatchEulerDiscreteScheduler)
-
-                    # Save original function
-                    original_retrieve_timesteps = retrieve_timesteps
-
-                    def patched_retrieve_timesteps(scheduler, num_inference_steps, device, timesteps=None, **kwargs):
-                        if not scheduler_supports_mu:
-                            kwargs.pop("mu", None)
-                        return original_retrieve_timesteps(
-                            scheduler, num_inference_steps, device, timesteps=timesteps, **kwargs
-                        )
-
-                    flux2_module.retrieve_timesteps = patched_retrieve_timesteps
+                    
                     if not scheduler_supports_mu:
+                        # Save original function
+                        original_retrieve_timesteps = retrieve_timesteps
+                        
+                        # Create patched version that removes mu parameter
+                        def patched_retrieve_timesteps(scheduler, num_inference_steps, device, timesteps=None, **kwargs):
+                            # Remove mu from kwargs if present
+                            kwargs.pop('mu', None)
+                            # Call original function without mu
+                            return original_retrieve_timesteps(scheduler, num_inference_steps, device, timesteps=timesteps, **kwargs)
+                        
+                        # Patch the function in the pipeline module
+                        import diffusers.pipelines.flux2.pipeline_flux2 as flux2_module
+                        flux2_module.retrieve_timesteps = patched_retrieve_timesteps
                         print(f"[SDNQ Sampler V2] Patched retrieve_timesteps to remove mu parameter for {type(pipeline.scheduler).__name__}")
-                    # (Flux denoise handling is done via `sigmas` + `latents` initialization above.)
                 except Exception as e:
                     print(f"[SDNQ Sampler V2] Warning: Could not patch retrieve_timesteps: {e}")
 
@@ -646,22 +428,6 @@ class SDNQSamplerV2:
                 try:
                     result = pipeline(**pipeline_kwargs)
                 except TypeError as e:
-                    # Some pipelines may not accept latents/strength; retry without them.
-                    if "latents" in str(e) and "unexpected keyword argument" in str(e):
-                        if "latents" in pipeline_kwargs:
-                            del pipeline_kwargs["latents"]
-                        if "strength" in pipeline_kwargs:
-                            del pipeline_kwargs["strength"]
-                        result = pipeline(**pipeline_kwargs)
-                    elif "strength" in str(e) and "unexpected keyword argument" in str(e):
-                        if "strength" in pipeline_kwargs:
-                            del pipeline_kwargs["strength"]
-                        result = pipeline(**pipeline_kwargs)
-                    elif ("width" in str(e) or "height" in str(e)) and "unexpected keyword argument" in str(e):
-                        # Some img2img pipelines infer size from `image` and don't accept width/height.
-                        pipeline_kwargs.pop("width", None)
-                        pipeline_kwargs.pop("height", None)
-                        result = pipeline(**pipeline_kwargs)
                     if "negative_prompt" in str(e) and "unexpected keyword argument" in str(e):
                         print(f"[SDNQ Sampler V2] ⚠️  Pipeline {type(pipeline).__name__} doesn't support negative_prompt - skipping it")
                         if "negative_prompt" in pipeline_kwargs:
@@ -803,17 +569,6 @@ class SDNQSamplerV2:
                 self.swap_scheduler(pipeline, scheduler)
                 self.current_scheduler = scheduler
 
-            # Seed handling (stateless, robust):
-            # - seed==0: randomize every run, but DO NOT overwrite the UI seed (keep 0) so subsequent runs stay random.
-            # - seed!=0: fixed.
-            in_seed = int(seed)
-            if in_seed == 0:
-                run_seed = secrets.randbits(64) or 1
-                print(f"[SDNQ Sampler V2] Seed mode: AUTO(0)  input=0  run={run_seed}")
-            else:
-                run_seed = in_seed
-                print(f"[SDNQ Sampler V2] Seed mode: FIXED  input={in_seed}  run={run_seed}")
-
             # Generate image
             pil_image = self.generate_image(
                 pipeline,
@@ -823,7 +578,7 @@ class SDNQSamplerV2:
                 cfg,
                 denoise,
                 latent_image,
-                run_seed,
+                seed,
             )
 
             # Convert to ComfyUI format
@@ -833,13 +588,9 @@ class SDNQSamplerV2:
             print(f"[SDNQ Sampler V2] Generation complete!")
             print(f"{'='*60}\n")
 
-            # ComfyUI 0.4+ prefers dict return with "result" and optional "ui".
-            # IMPORTANT: when seed==0, we keep the widget value at 0 so the user can keep getting random seeds.
-            if in_seed == 0:
-                return {"result": (comfy_tensor,)}
-            return {"result": (comfy_tensor,), "ui": {"seed": [int(run_seed)]}}
+            return (comfy_tensor,)
 
-        except InterruptedError:
+        except InterruptedError as e:
             print(f"\n{'='*60}")
             print(f"[SDNQ Sampler V2] Generation interrupted")
             print(f"{'='*60}\n")
