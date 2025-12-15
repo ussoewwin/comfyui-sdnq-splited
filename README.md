@@ -1,6 +1,6 @@
 # ComfyUI-SDNQ-Splited
 
-> **このリポジトリは [EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq) のフォーク版です**
+> **This repository is a fork of [EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq)**
 
 **Load and run SDNQ quantized models in ComfyUI with 50-75% VRAM savings!**
 
@@ -8,15 +8,15 @@ This custom node pack enables running [SDNQ (SD.Next Quantization)](https://gith
 
 > **SDNQ is developed by [Disty0](https://github.com/Disty0)** - this node pack provides ComfyUI integration.
 
-## 本家との違い
+## Differences from Original Repository
 
-本家リポジトリ（[EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq)）では一体型のサンプラーノードのみが提供されていますが、このフォーク版では**機能ごとに分割されたノード構造**を提供しています：
+The original repository ([EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq)) provides only an all-in-one sampler node, but this fork provides a **modular node structure with split functionality**:
 
-- **SDNQ Model Loader**: モデルの読み込み専用ノード
-- **SDNQ LoRA Loader**: LoRAの読み込み専用ノード  
-- **SDNQ Sampler / SDNQ Sampler V2**: 画像生成専用ノード
+- **SDNQ Model Loader**: Dedicated node for loading models
+- **SDNQ LoRA Loader**: Dedicated node for loading LoRAs
+- **SDNQ Sampler / SDNQ Sampler V2**: Dedicated nodes for image generation
 
-これにより、ComfyUIの標準的なワークフロー（モデル読み込み → LoRA適用 → サンプリング）と同じ構造でSDNQモデルを使用できます。
+This allows you to use SDNQ models with the same workflow structure as standard ComfyUI workflows (Model Load → LoRA Apply → Sampling).
 
 ---
 
