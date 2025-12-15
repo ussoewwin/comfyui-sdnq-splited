@@ -114,7 +114,9 @@ Alternatively, you can use the standalone sampler node which loads model and gen
 - `scheduler`: FlowMatchEulerDiscreteScheduler (FLUX/SD3) or traditional samplers
 
 **Performance Optimizations** (optional):
-- `use_xformers`: 10-45% speedup (safe to try, auto-fallback to SDPA)
+- `use_xformers`: Memory-efficient attention (safe to try, auto-fallback to SDPA)
+- `use_flash_attention`: Flash Attention (FA) for faster inference and lower VRAM
+- `use_sage_attention`: Sage Attention (SA) for optimized attention computation
 - `enable_vae_tiling`: For large images >1536px (prevents OOM)
 - SDPA (Scaled Dot Product Attention): Always active - automatic PyTorch 2.0+ optimization
 
@@ -142,7 +144,9 @@ Most available in uint4 (max VRAM savings) or int8 (best quality). Browse: https
 
 **For All Memory Modes**:
 - SDPA (Scaled Dot Product Attention) is always active - automatic PyTorch 2.0+ optimization
-- Enable `use_xformers=True` for 10-45% additional speedup (safe to try)
+- Enable the xFormers option in the UI (safe to try)
+- Enable the Flash Attention (FA) option in the UI - faster inference and lower VRAM
+- Enable the Sage Attention (SA) option in the UI - optimized attention computation
 - Use `enable_vae_tiling=True` for large images (>1536px) to prevent OOM
 
 **Scheduler Selection**:
@@ -174,7 +178,9 @@ If you see "xFormers not available" but have it installed:
 ### Performance is Slow
 
 **Balanced/lowvram modes**: Inherently slower due to CPU↔GPU data movement. Options:
-- Enable `use_xformers=True` (10-45% speedup if compatible)
+- Enable the xFormers option in the UI (if compatible)
+- Enable the Flash Attention (FA) option in the UI
+- Enable the Sage Attention (SA) option in the UI
 - SDPA is always active for automatic optimization
 - Upgrade to more VRAM for full GPU mode
 - Use smaller model (uint4 vs int8)
