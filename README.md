@@ -1,4 +1,6 @@
-# ComfyUI-SDNQ
+# ComfyUI-SDNQ-Splited
+
+> **このリポジトリは [EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq) のフォーク版です**
 
 **Load and run SDNQ quantized models in ComfyUI with 50-75% VRAM savings!**
 
@@ -6,16 +8,26 @@ This custom node pack enables running [SDNQ (SD.Next Quantization)](https://gith
 
 > **SDNQ is developed by [Disty0](https://github.com/Disty0)** - this node pack provides ComfyUI integration.
 
+## 本家との違い
+
+本家リポジトリ（[EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq)）では一体型のサンプラーノードのみが提供されていますが、このフォーク版では**機能ごとに分割されたノード構造**を提供しています：
+
+- **SDNQ Model Loader**: モデルの読み込み専用ノード
+- **SDNQ LoRA Loader**: LoRAの読み込み専用ノード  
+- **SDNQ Sampler / SDNQ Sampler V2**: 画像生成専用ノード
+
+これにより、ComfyUIの標準的なワークフロー（モデル読み込み → LoRA適用 → サンプリング）と同じ構造でSDNQモデルを使用できます。
+
 ---
 
 ## Features
 
-- **🎨 Standalone Sampler**: All-in-one node - load model, generate images, done
+- **🔀 Modular Node Structure**: Functionality split into separate nodes (Model Loader, LoRA Loader, Sampler) - compatible with standard ComfyUI workflows
 - **📦 Model Catalog**: 30+ pre-configured SDNQ models with auto-download
 - **💾 Smart Caching**: Download once, use forever
 - **🚀 VRAM Savings**: 50-75% memory reduction with quantization
 - **⚡ Performance Optimizations**: Optional xFormers, VAE tiling, SDPA (automatic)
-- **🎯 LoRA Support**: Load LoRAs from ComfyUI loras folder
+- **🎯 LoRA Support**: Load LoRAs from ComfyUI loras folder via dedicated loader node
 - **📅 Multi-Scheduler**: 14 schedulers (FLUX/SD3 flow-match + traditional diffusion)
 - **🔧 Memory Modes**: GPU (fastest), balanced (12-16GB VRAM), lowvram (8GB VRAM)
 
@@ -34,8 +46,8 @@ This custom node pack enables running [SDNQ (SD.Next Quantization)](https://gith
 
 ```bash
 cd ComfyUI/custom_nodes/
-git clone https://github.com/EnragedAntelope/comfyui-sdnq.git
-cd comfyui-sdnq
+git clone https://github.com/ussoewwin/comfyui-sdnq-splited.git
+cd comfyui-sdnq-splited
 pip install -r requirements.txt
 ```
 
@@ -45,47 +57,72 @@ Restart ComfyUI after installation.
 
 ## Quick Start
 
-1. Add **SDNQ Sampler** node (under `sampling/SDNQ`)
-2. Select a model from dropdown (auto-downloads on first use)
-3. Enter your prompt
-4. Click Queue Prompt
-5. Done! Image output connects directly to SaveImage
+### Using Split Nodes (Recommended - Modular Workflow)
 
-**Defaults are optimized** - select model, enter prompt, generate!
+1. Add **SDNQ Model Loader** node (under `loaders/SDNQ`)
+2. Add **SDNQ LoRA Loader** node (optional, under `loaders/SDNQ`)
+3. Add **SDNQ Sampler** or **SDNQ Sampler V2** node (under `sampling/SDNQ`)
+4. Connect Model Loader → LoRA Loader → Sampler
+5. Select model from dropdown (auto-downloads on first use)
+6. Enter your prompt and click Queue Prompt
+
+### Using Standalone Sampler (All-in-One)
+
+Alternatively, you can use the standalone sampler node which loads model and generates in one step (similar to the original repository).
 
 ---
 
 ## Node Reference
 
-### SDNQ Sampler
+### SDNQ Model Loader
 
-**Category**: `sampling/SDNQ`
+**Category**: `loaders/SDNQ`
 
 **Main Parameters**:
-- `model_selection`: Dropdown with 30+ pre-configured models
+- `model_selection`: Dropdown with 30+ pre-configured SDNQ models
 - `custom_model_path`: For local models or custom HuggingFace repos
-- `prompt` / `negative_prompt`: What to create / what to avoid
-- `steps`, `cfg`, `width`, `height`, `seed`: Standard generation controls
-- `scheduler`: FlowMatchEulerDiscreteScheduler (FLUX/SD3) or traditional samplers
-
-**Memory Management**:
 - `memory_mode`:
   - `gpu` = Full GPU (fastest, 24GB+ VRAM required)
   - `balanced` = CPU offloading (12-16GB VRAM)
   - `lowvram` = Sequential offloading (8GB VRAM, slowest)
 - `dtype`: bfloat16 (recommended), float16, or float32
 
+**Outputs**: `MODEL` (connects to SDNQ Sampler or other SDNQ nodes)
+
+---
+
+### SDNQ LoRA Loader
+
+**Category**: `loaders/SDNQ`
+
+**Main Parameters**:
+- `lora_selection`: Dropdown from ComfyUI loras folder
+- `lora_custom_path`: Custom LoRA path or HuggingFace repo
+- `lora_strength`: -5.0 to +5.0 (1.0 = full strength)
+- `model`: Input from SDNQ Model Loader
+
+**Outputs**: `MODEL` (connects to SDNQ Sampler)
+
+---
+
+### SDNQ Sampler / SDNQ Sampler V2
+
+**Category**: `sampling/SDNQ`
+
+**Main Parameters**:
+- `model`: Input from SDNQ Model Loader or SDNQ LoRA Loader
+- `prompt` / `negative_prompt`: What to create / what to avoid
+- `steps`, `cfg`, `width`, `height`, `seed`: Standard generation controls
+- `scheduler`: FlowMatchEulerDiscreteScheduler (FLUX/SD3) or traditional samplers
+
 **Performance Optimizations** (optional):
 - `use_xformers`: 10-45% speedup (safe to try, auto-fallback to SDPA)
 - `enable_vae_tiling`: For large images >1536px (prevents OOM)
 - SDPA (Scaled Dot Product Attention): Always active - automatic PyTorch 2.0+ optimization
 
-**LoRA Support**:
-- `lora_selection`: Dropdown from ComfyUI loras folder
-- `lora_custom_path`: Custom LoRA path or HuggingFace repo
-- `lora_strength`: -5.0 to +5.0 (1.0 = full strength)
-
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
+
+**Note**: The standalone sampler nodes (SDNQ Sampler, SDNQ Sampler V2) can also work independently, loading models and generating images in one step (similar to the original repository).
 
 ---
 
@@ -176,6 +213,10 @@ This project integrates with [SDNQ by Disty0](https://github.com/Disty0/sdnq).
 ---
 
 ## Credits
+
+### Original Repository
+- **Original ComfyUI-SDNQ**: [EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq)
+- This repository is a fork with modular node structure (split functionality)
 
 ### SDNQ - SD.Next Quantization Engine
 - **Author**: Disty0
