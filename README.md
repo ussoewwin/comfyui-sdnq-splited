@@ -21,7 +21,7 @@ This fork provides a **modular node structure with split functionality**. The fo
 - **SDNQ Model Loader**: Dedicated node for loading models
 - **SDNQ LoRA Loader**: Dedicated node for loading LoRAs
 - **SDNQ VAE Encode**: Dedicated node for encoding images to latent space (compatible with diffusers VAE)
-- **SDNQ Sampler / SDNQ Sampler V2**: Dedicated nodes for image generation
+- **SDNQ Sampler V2**: Dedicated node for image generation
 
 This allows you to use SDNQ models with the same workflow structure as standard ComfyUI workflows (Model Load → LoRA Apply → Sampling).
 
@@ -59,7 +59,7 @@ Restart ComfyUI after installation.
 
 1. Add **SDNQ Model Loader** node (under `loaders/SDNQ`)
 2. Add **SDNQ LoRA Loader** node (optional, under `loaders/SDNQ`)
-3. Add **SDNQ Sampler** or **SDNQ Sampler V2** node (under `sampling/SDNQ`)
+3. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`)
 4. Connect Model Loader → LoRA Loader → Sampler
 5. Select model from dropdown (auto-downloads on first use)
 6. Enter your prompt and click Queue Prompt
@@ -85,7 +85,7 @@ Alternatively, you can use the standalone sampler node which loads model and gen
   - `lowvram` = Sequential offloading (8GB VRAM, slowest)
 - `dtype`: bfloat16 (recommended), float16, or float32
 
-**Outputs**: `MODEL` (connects to SDNQ Sampler or other SDNQ nodes)
+**Outputs**: `MODEL` (connects to SDNQ Sampler V2 or other SDNQ nodes)
 
 ---
 
@@ -99,11 +99,11 @@ Alternatively, you can use the standalone sampler node which loads model and gen
 - `lora_strength`: -5.0 to +5.0 (1.0 = full strength)
 - `model`: Input from SDNQ Model Loader
 
-**Outputs**: `MODEL` (connects to SDNQ Sampler)
+**Outputs**: `MODEL` (connects to SDNQ Sampler V2)
 
 ---
 
-### SDNQ Sampler / SDNQ Sampler V2
+### SDNQ Sampler V2
 
 **Category**: `sampling/SDNQ`
 
@@ -122,7 +122,7 @@ Alternatively, you can use the standalone sampler node which loads model and gen
 
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
 
-**Note**: The standalone sampler nodes (SDNQ Sampler, SDNQ Sampler V2) can also work independently, loading models and generating images in one step (similar to the original repository).
+**Note**: SDNQ Sampler V2 can also work independently, loading models and generating images in one step (similar to the original repository).
 
 ---
 
