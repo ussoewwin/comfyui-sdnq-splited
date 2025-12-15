@@ -30,7 +30,7 @@ This allows you to use SDNQ models with the same workflow structure as standard 
 ## Features
 
 - **🔀 Modular Node Structure**: Functionality split into separate nodes (Model Loader, LoRA Loader, Sampler) - compatible with standard ComfyUI workflows
-- **📦 Model Catalog**: 30+ pre-configured SDNQ models with auto-download
+- **📦 Model Catalog**: 30+ pre-configured SDNQ models with auto-download (note: at the moment, development is focused on FLUX.2 compatibility)
 - **💾 Smart Caching**: Download once, use forever
 - **🚀 VRAM Savings**: 50-75% memory reduction with quantization
 - **⚡ Performance Optimizations**: Optional xFormers, VAE tiling, SDPA (automatic)
