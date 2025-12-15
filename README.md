@@ -33,7 +33,7 @@ This allows you to use SDNQ models with the same workflow structure as standard 
 - **📦 Model Catalog**: 30+ pre-configured SDNQ models with auto-download (note: at the moment, development is focused on FLUX.2 compatibility)
 - **💾 Smart Caching**: Download once, use forever
 - **🚀 VRAM Savings**: 50-75% memory reduction with quantization
-- **⚡ Performance Optimizations**: Optional xFormers, VAE tiling, SDPA (automatic)
+- **⚡ Performance Optimizations**: Optional xFormers, Flash Attention (FA), Sage Attention (SA), VAE tiling, SDPA (automatic)
 - **🎯 LoRA Support**: Load LoRAs from ComfyUI loras folder via dedicated loader node
 - **📅 Multi-Scheduler**: 14 schedulers (FLUX/SD3 flow-match + traditional diffusion)
 - **🔧 Memory Modes**: GPU (fastest), balanced (12-16GB VRAM), lowvram (8GB VRAM)
