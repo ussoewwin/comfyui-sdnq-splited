@@ -201,6 +201,16 @@ If you see "xFormers not available" but have it installed:
 
 ---
 
+## Technical Information
+
+### Standard KSampler vs SDNQSamplerV2 Comparison
+
+A detailed comparison document explaining the architectural and functional differences between the standard ComfyUI KSampler and SDNQSamplerV2 implementations, including denoise control mechanisms, image-to-image processing, and Flux2 support.
+
+See: [COMPARISON_TABLE.md](md/COMPARISON_TABLE.md)
+
+---
+
 ## Contributing
 
 Contributions welcome! Please:
