@@ -10,7 +10,7 @@ This custom node pack enables running [SDNQ (SD.Next Quantization)](https://gith
 
 ## Differences from Original Repository
 
-The original repository ([EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq)) provides only an all-in-one sampler node, but this fork provides a **modular node structure with split functionality**:
+This fork focuses on providing a **modular node structure with split functionality**, while the original repository ([EnragedAntelope/comfyui-sdnq](https://github.com/EnragedAntelope/comfyui-sdnq)) uses an all-in-one sampler approach:
 
 - **SDNQ Model Loader**: Dedicated node for loading models
 - **SDNQ LoRA Loader**: Dedicated node for loading LoRAs
