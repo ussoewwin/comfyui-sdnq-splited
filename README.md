@@ -64,10 +64,6 @@ Restart ComfyUI after installation.
 5. Select model from dropdown (auto-downloads on first use)
 6. Enter your prompt and click Queue Prompt
 
-### Using Standalone Sampler (All-in-One)
-
-Alternatively, you can use the standalone sampler node which loads model and generates in one step (similar to the original repository).
-
 ---
 
 ## Node Reference
