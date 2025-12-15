@@ -133,6 +133,8 @@ Alternatively, you can use the standalone sampler node which loads model and gen
 
 Most available in uint4 (max VRAM savings) or int8 (best quality). Browse: https://huggingface.co/collections/Disty0/sdnq
 
+**Note**: While the models listed above are theoretically supported, **at the moment**, this repository is being developed specifically for FLUX.2. Other models have not been tested and their functionality is not guaranteed at this time. If you encounter issues with non-FLUX.2 models, please be aware that current development focus is on FLUX.2 compatibility.
+
 ---
 
 ## Performance Tips
