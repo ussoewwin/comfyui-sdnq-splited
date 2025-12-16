@@ -1391,18 +1391,18 @@ class SDNQSampler:
         except InterruptedError:
             raise
         except torch.cuda.OutOfMemoryError as e:
-            # VRAM不足エラーの場合、より具体的な対処法を提示
+            # Provide more specific solutions for VRAM out of memory errors
             raise Exception(
-                f"VRAM不足エラーが発生しました\n\n"
+                f"VRAM out of memory error occurred\n\n"
                 f"Error: {str(e)}\n\n"
-                f"対処法:\n"
-                f"1. Memory modeを'lowvram'に変更（sequential CPU offload）\n"
-                f"2. 画像サイズを小さくする（例: 1024x1024 → 768x768）\n"
-                f"3. VAE tilingを有効にする（enable_vae_tilingをtrueに）\n"
-                f"4. 他のアプリケーションを閉じてVRAMを解放\n"
-                f"5. より小さいモデルを使用する\n"
-                f"6. Stepsを減らす（現在: {steps}）\n"
-                f"7. Memory modeを'lowvram'に変更することを推奨"
+                f"Solutions:\n"
+                f"1. Change memory mode to 'lowvram' (sequential CPU offload)\n"
+                f"2. Reduce image size (e.g., 1024x1024 → 768x768)\n"
+                f"3. Enable VAE tiling (set enable_vae_tiling to true)\n"
+                f"4. Close other applications to free VRAM\n"
+                f"5. Use a smaller model\n"
+                f"6. Reduce steps (current: {steps})\n"
+                f"7. Recommended: Change memory mode to 'lowvram'"
             )
         except Exception as e:
             # Don't double-wrap exceptions we already formatted

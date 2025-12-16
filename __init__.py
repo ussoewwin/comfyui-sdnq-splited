@@ -9,6 +9,7 @@ This node pack enables loading SDNQ models with 50-75% VRAM savings while mainta
 """
 
 from .nodes.samplerv2 import SDNQSamplerV2
+from .nodes.flux2samplerv2 import Flux2SDNQSamplerV2
 from .nodes.model_loader import SDNQModelLoader
 from .nodes.lora_loader import SDNQLoraLoader
 from .nodes.vae_encode import SDNQVAEEncode
@@ -19,6 +20,7 @@ from .nodes.vae_encode import SDNQVAEEncode
 
 NODE_CLASS_MAPPINGS = {
     "SDNQSamplerV2": SDNQSamplerV2,
+    "Flux2SDNQSamplerV2": Flux2SDNQSamplerV2,
     "SDNQModelLoader": SDNQModelLoader,
     "SDNQLoraLoader": SDNQLoraLoader,
     "SDNQVAEEncode": SDNQVAEEncode,
@@ -26,6 +28,7 @@ NODE_CLASS_MAPPINGS = {
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SDNQSamplerV2": "SDNQ Sampler V2",
+    "Flux2SDNQSamplerV2": "Flux2 SDNQ Sampler V2",
     "SDNQModelLoader": "SDNQ Model Loader",
     "SDNQLoraLoader": "SDNQ LoRA Loader",
     "SDNQVAEEncode": "SDNQ VAE Encode",

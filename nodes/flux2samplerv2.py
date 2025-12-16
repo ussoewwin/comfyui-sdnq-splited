@@ -35,32 +35,15 @@ except ImportError:
 from diffusers import DiffusionPipeline
 
 # Scheduler imports
-# Flow-match schedulers (for FLUX, SD3, Qwen, Z-Image)
+# Flux2 pipelines ONLY support FlowMatchEulerDiscreteScheduler
 from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
-
-# Traditional diffusion schedulers (for SDXL, SD1.5, etc.)
-from diffusers.schedulers import (
-    DDIMScheduler,
-    DDPMScheduler,
-    PNDMScheduler,
-    LMSDiscreteScheduler,
-    EulerDiscreteScheduler,
-    HeunDiscreteScheduler,
-    EulerAncestralDiscreteScheduler,
-    DPMSolverMultistepScheduler,
-    DPMSolverSinglestepScheduler,
-    KDPM2DiscreteScheduler,
-    KDPM2AncestralDiscreteScheduler,
-    DEISMultistepScheduler,
-    UniPCMultistepScheduler,
-)
 
 # Local imports for LoRA folder access (if needed)
 
 
-class SDNQSamplerV2:
+class Flux2SDNQSamplerV2:
     """
-    Standalone SDNQ sampler that loads quantized models and generates images.
+    Flux2-optimized SDNQ sampler that loads quantized models and generates images.
 
     All-in-one node that handles:
     - Model selection from pre-configured catalog OR custom paths
@@ -96,25 +79,9 @@ class SDNQSamplerV2:
         All parameters verified from diffusers documentation.
         """
         # Scheduler options
-        # Flow-based schedulers ONLY work with FLUX/SD3/Qwen/Z-Image models
-        # Traditional schedulers ONLY work with SDXL/SD1.5 models
+        # Flux2 pipelines ONLY support FlowMatchEulerDiscreteScheduler
         scheduler_list = [
-            # Flow-based (for FLUX, SD3, Qwen, Z-Image)
             "FlowMatchEulerDiscreteScheduler",
-            # Traditional diffusion (for SDXL, SD1.5) - Top 10 most popular
-            "DPMSolverMultistepScheduler",
-            "UniPCMultistepScheduler",
-            "EulerDiscreteScheduler",
-            "EulerAncestralDiscreteScheduler",
-            "DDIMScheduler",
-            "HeunDiscreteScheduler",
-            "KDPM2DiscreteScheduler",
-            "KDPM2AncestralDiscreteScheduler",
-            "DPMSolverSinglestepScheduler",
-            "DEISMultistepScheduler",
-            "LMSDiscreteScheduler",
-            "DDPMScheduler",
-            "PNDMScheduler",
         ]
 
         return {
@@ -135,12 +102,6 @@ class SDNQSamplerV2:
                     "default": "",
                     "multiline": True,
                     "tooltip": "Text description of the image to generate. Be descriptive for best results."
-                }),
-
-                "negative_prompt": ("STRING", {
-                    "default": "blurry, low quality, distorted, deformed, ugly, bad anatomy, bad hands, text, watermark, signature",
-                    "multiline": True,
-                    "tooltip": "What to avoid in the image. Default includes common quality issues. Clear this for no negative prompt. Note: FLUX-schnell (cfg=0) ignores negative prompts."
                 }),
 
                 # ============================================================
@@ -176,8 +137,8 @@ class SDNQSamplerV2:
                 }),
 
                 "scheduler": (scheduler_list, {
-                    "default": "DPMSolverMultistepScheduler",
-                    "tooltip": "⚠️ IMPORTANT: Use FlowMatchEulerDiscreteScheduler for FLUX/SD3/Qwen/Z-Image. Use DPMSolver/Euler/UniPC for SDXL/SD1.5. Wrong scheduler = broken images!"
+                    "default": "FlowMatchEulerDiscreteScheduler",
+                    "tooltip": "FlowMatchEulerDiscreteScheduler is the only scheduler supported for Flux2 pipelines."
                 }),
 
                 "denoise": ("FLOAT", {
@@ -199,13 +160,13 @@ class SDNQSamplerV2:
     FUNCTION = "generate"
 
     # Category for node menu
-    CATEGORY = "sampling/SDNQ"
+    CATEGORY = "sampling/SDNQ/Flux2"
 
     # V3 API: Output node (can save/display results)
     OUTPUT_NODE = False
 
     # V3 API: Node description
-    DESCRIPTION = "Generate images using SDNQ models. Connect SDNQ Model Loader to provide the model."
+    DESCRIPTION = "Generate images using SDNQ Flux2 models. Optimized for Flux2Pipeline. Connect SDNQ Model Loader to provide the model."
 
     def check_interrupted(self):
         """Check if generation should be interrupted (ComfyUI interrupt support)."""
@@ -230,27 +191,13 @@ class SDNQSamplerV2:
         Based on verified API from:
         https://huggingface.co/docs/diffusers/en/using-diffusers/schedulers
         """
-        print(f"[SDNQ Sampler V2] Swapping scheduler to: {scheduler_name}")
+        print(f"[Flux2 SDNQ Sampler V2] Swapping scheduler to: {scheduler_name}")
 
         try:
             # Map scheduler name to class
+            # Flux2 pipelines ONLY support FlowMatchEulerDiscreteScheduler
             scheduler_map = {
-                # Flow-based schedulers (FLUX, SD3, Qwen, Z-Image)
                 "FlowMatchEulerDiscreteScheduler": FlowMatchEulerDiscreteScheduler,
-                # Traditional diffusion schedulers (SDXL, SD1.5)
-                "DPMSolverMultistepScheduler": DPMSolverMultistepScheduler,
-                "UniPCMultistepScheduler": UniPCMultistepScheduler,
-                "EulerDiscreteScheduler": EulerDiscreteScheduler,
-                "EulerAncestralDiscreteScheduler": EulerAncestralDiscreteScheduler,
-                "DDIMScheduler": DDIMScheduler,
-                "HeunDiscreteScheduler": HeunDiscreteScheduler,
-                "KDPM2DiscreteScheduler": KDPM2DiscreteScheduler,
-                "KDPM2AncestralDiscreteScheduler": KDPM2AncestralDiscreteScheduler,
-                "DPMSolverSinglestepScheduler": DPMSolverSinglestepScheduler,
-                "DEISMultistepScheduler": DEISMultistepScheduler,
-                "LMSDiscreteScheduler": LMSDiscreteScheduler,
-                "DDPMScheduler": DDPMScheduler,
-                "PNDMScheduler": PNDMScheduler,
             }
 
             if scheduler_name not in scheduler_map:
@@ -265,7 +212,7 @@ class SDNQSamplerV2:
             # This preserves scheduler configuration while changing the algorithm
             pipeline.scheduler = scheduler_class.from_config(pipeline.scheduler.config)
 
-            print(f"[SDNQ Sampler V2] ✓ Scheduler swapped successfully")
+            print(f"[Flux2 SDNQ Sampler V2] ✓ Scheduler swapped successfully")
 
         except Exception as e:
             raise Exception(
@@ -273,14 +220,13 @@ class SDNQSamplerV2:
                 f"Error: {str(e)}\n\n"
                 f"Requested scheduler: {scheduler_name}\n\n"
                 f"Troubleshooting:\n"
-                f"1. Ensure scheduler is compatible with the model type\n"
-                f"2. FLUX/SD3/Qwen/Z-Image: Use FlowMatchEulerDiscreteScheduler\n"
-                f"3. SDXL/SD1.5: Use DPMSolver, Euler, UniPC, or DDIM\n"
-                f"4. Wrong scheduler type will produce broken/corrupted images\n"
-                f"5. Check diffusers version (requires >=0.36.0)"
+                f"1. Flux2 pipelines ONLY support FlowMatchEulerDiscreteScheduler\n"
+                f"2. Ensure you are using FlowMatchEulerDiscreteScheduler\n"
+                f"3. Wrong scheduler type will produce broken/corrupted images\n"
+                f"4. Check diffusers version (requires >=0.36.0)"
             )
 
-    def generate_image(self, pipeline: DiffusionPipeline, prompt: str, negative_prompt: str,
+    def generate_image(self, pipeline: DiffusionPipeline, prompt: str,
                       steps: int, cfg: float, denoise: float, latent_image: dict, seed: int) -> Image.Image:
         """
         Generate image using the loaded pipeline.
@@ -288,7 +234,6 @@ class SDNQSamplerV2:
         Args:
             pipeline: Loaded diffusers pipeline
             prompt: Text prompt for generation
-            negative_prompt: Negative prompt (optional)
             steps: Number of inference steps
             cfg: Guidance scale (classifier-free guidance strength)
             denoise: Denoising strength (0.0-1.0)
@@ -352,14 +297,14 @@ class SDNQSamplerV2:
         width = latent_width * vae_scale_factor
         height = latent_height * vae_scale_factor
         
-        print(f"[SDNQ Sampler V2] Generating image...")
-        print(f"[SDNQ Sampler V2]   Pipeline type: {pipeline_type}")
-        print(f"[SDNQ Sampler V2]   Is Flux family: {is_flux_family}")
-        print(f"[SDNQ Sampler V2]   Supports image arg: {supports_image_arg}")
-        print(f"[SDNQ Sampler V2]   Prompt: {prompt[:100]}{'...' if len(prompt) > 100 else ''}")
-        print(f"[SDNQ Sampler V2]   Steps: {steps}, CFG: {cfg}, Denoise: {denoise}")
-        print(f"[SDNQ Sampler V2]   Latent size: {latent_width}x{latent_height} -> Image size: {width}x{height} (scale_factor={vae_scale_factor})")
-        print(f"[SDNQ Sampler V2]   Seed: {seed}")
+        print(f"[Flux2 SDNQ Sampler V2] Generating image...")
+        print(f"[Flux2 SDNQ Sampler V2]   Pipeline type: {pipeline_type}")
+        print(f"[Flux2 SDNQ Sampler V2]   Is Flux family: {is_flux_family}")
+        print(f"[Flux2 SDNQ Sampler V2]   Supports image arg: {supports_image_arg}")
+        print(f"[Flux2 SDNQ Sampler V2]   Prompt: {prompt[:100]}{'...' if len(prompt) > 100 else ''}")
+        print(f"[Flux2 SDNQ Sampler V2]   Steps: {steps}, CFG: {cfg}, Denoise: {denoise}")
+        print(f"[Flux2 SDNQ Sampler V2]   Latent size: {latent_width}x{latent_height} -> Image size: {width}x{height} (scale_factor={vae_scale_factor})")
+        print(f"[Flux2 SDNQ Sampler V2]   Seed: {seed}")
 
         # Check for interruption before starting
         if self.check_interrupted():
@@ -381,7 +326,7 @@ class SDNQSamplerV2:
                 vram_used_before_gb = vram_used_before / (1024**3)
                 vram_free_before_gb = vram_free_before / (1024**3)
                 
-                print(f"[SDNQ Sampler V2] VRAM before generation: {vram_used_before_gb:.2f}GB used, {vram_free_before_gb:.2f}GB free")
+                print(f"[Flux2 SDNQ Sampler V2] VRAM before generation: {vram_used_before_gb:.2f}GB used, {vram_free_before_gb:.2f}GB free")
             
             # Create generator for reproducible generation (match pipeline execution device when possible)
             generator_device = getattr(pipeline, "_execution_device", None)
@@ -493,19 +438,19 @@ class SDNQSamplerV2:
                     if isinstance(px, torch.Tensor):
                         pil_cond = _tensor_to_pil_rgb(px)
                 except Exception as e:
-                    print(f"[SDNQ Sampler V2] Warning: failed to convert pixels to PIL: {e}")
+                    print(f"[Flux2 SDNQ Sampler V2] Warning: failed to convert pixels to PIL: {e}")
             if pil_cond is None and isinstance(latent_image, dict) and latent_image.get("vae") is not None:
                 try:
                     pil_cond = _decode_latents_to_pil(samples)
                 except Exception as e:
-                    print(f"[SDNQ Sampler V2] Warning: failed to decode latents to PIL: {e}")
+                    print(f"[Flux2 SDNQ Sampler V2] Warning: failed to decode latents to PIL: {e}")
 
             # For non-Flux pipelines: prefer `image` + `strength` over `latents` for i2i
             # For Flux pipelines: will handle `image` and `latents` separately below
             if supports_image_arg and pil_cond is not None and (("vae" in latent_image) or (latent_image.get("pixels") is not None)):
                 # For non-Flux: use `image` + `strength` (standard img2img API)
                 if not is_flux_family:
-                    print(f"[SDNQ Sampler V2]   i2i mode: Non-Flux pipeline - using `image` + `strength`")
+                    print(f"[Flux2 SDNQ Sampler V2]   i2i mode: Non-Flux pipeline - using `image` + `strength`")
                     pipeline_kwargs["image"] = pil_cond
                     # When conditioning on an init image, keep width/height consistent with that image.
                     try:
@@ -515,7 +460,7 @@ class SDNQSamplerV2:
                         pass
                 # For Flux: set `image` first, will be conditionally removed if latents are initialized
                 else:
-                    print(f"[SDNQ Sampler V2]   i2i mode: Flux pipeline - setting `image`, will initialize latents below")
+                    print(f"[Flux2 SDNQ Sampler V2]   i2i mode: Flux pipeline - setting `image`, will initialize latents below")
                     pipeline_kwargs["image"] = pil_cond
                     # When conditioning on an init image, keep width/height consistent with that image.
                     # Some pipelines (notably Flux) can behave incorrectly if width/height disagree with the provided image.
@@ -528,7 +473,7 @@ class SDNQSamplerV2:
                 # This is required to avoid "complete noise" results where the init image isn't actually used as a starting point.
                 flux_latent_init_ok = False
                 if is_flux_family and pipeline_type in ["Flux2Pipeline", "FluxPipeline"] and strength is not None:
-                    print(f"[SDNQ Sampler V2]   Flux i2i: Initializing latents from input image (strength={strength})")
+                    print(f"[Flux2 SDNQ Sampler V2]   Flux i2i: Initializing latents from input image (strength={strength})")
                     try:
                         # Build a sigma schedule that keeps the user-requested step count stable.
                         # In flow-matching, sigma directly controls the mixing ratio:
@@ -591,27 +536,27 @@ class SDNQSamplerV2:
                         # Pass img2img starting latents (pipeline will pack internally)
                         pipeline_kwargs["latents"] = x_t
                         flux_latent_init_ok = True
-                        print(f"[SDNQ Sampler V2]   Flux i2i: Latents initialized successfully, will remove `image` arg")
+                        print(f"[Flux2 SDNQ Sampler V2]   Flux i2i: Latents initialized successfully, will remove `image` arg")
                     except Exception as e:
-                        print(f"[SDNQ Sampler V2] Warning: Flux img2img latent init failed, falling back to conditioning-only: {e}")
+                        print(f"[Flux2 SDNQ Sampler V2] Warning: Flux img2img latent init failed, falling back to conditioning-only: {e}")
                 # IMPORTANT:
                 # If we successfully initialize `latents` from the input image, do NOT also pass `image=`.
                 # Flux2 treats `image` as additional reference conditioning tokens; keeping it makes denoise appear
                 # "stuck" (0.2 and 0.8 look similar) because the reference conditioning dominates.
                 if flux_latent_init_ok:
                     pipeline_kwargs.pop("image", None)
-                    print(f"[SDNQ Sampler V2]   Flux i2i: Removed `image` arg (using latents only)")
+                    print(f"[Flux2 SDNQ Sampler V2]   Flux i2i: Removed `image` arg (using latents only)")
             
             # For non-Flux pipelines: add `strength` parameter for i2i
             # Note: `image` was already added above if `supports_image_arg` and `pil_cond` are available
             if (not is_flux_family) and strength is not None and ("strength" in call_params):
-                print(f"[SDNQ Sampler V2]   Non-Flux i2i: Adding `strength`={strength}")
+                print(f"[Flux2 SDNQ Sampler V2]   Non-Flux i2i: Adding `strength`={strength}")
                 pipeline_kwargs["strength"] = strength
             
             # Fallback path for non-Flux pipelines that don't support `image` but accept `latents` (rare)
             # Only use this if `image` was not already set above
             if (not is_flux_family) and ("image" not in pipeline_kwargs) and isinstance(latent_image, dict) and latent_image.get("vae") is not None:
-                print(f"[SDNQ Sampler V2]   Non-Flux i2i: Fallback path - using `latents` directly (image arg not supported)")
+                print(f"[Flux2 SDNQ Sampler V2]   Non-Flux i2i: Fallback path - using `latents` directly (image arg not supported)")
                 try:
                     init_latents = samples
                     target_dtype = None
@@ -628,16 +573,9 @@ class SDNQSamplerV2:
                     if strength is not None and ("strength" in call_params):
                         pipeline_kwargs["strength"] = strength
                 except Exception as e:
-                    print(f"[SDNQ Sampler V2] Warning: failed to set i2i latents/strength: {e}")
+                    print(f"[Flux2 SDNQ Sampler V2] Warning: failed to set i2i latents/strength: {e}")
 
-            # Check if pipeline supports negative_prompt
-            supports_negative_prompt = pipeline_type not in ["Flux2Pipeline", "FluxPipeline", "FluxSchnellPipeline"]
-            
-            if supports_negative_prompt and negative_prompt and negative_prompt.strip():
-                pipeline_kwargs["negative_prompt"] = negative_prompt
-                print(f"[SDNQ Sampler V2]   Using negative_prompt (supported for {pipeline_type})")
-            elif negative_prompt and negative_prompt.strip() and not supports_negative_prompt:
-                print(f"[SDNQ Sampler V2] ⚠️  Pipeline {pipeline_type} doesn't support negative_prompt - skipping it")
+            # Note: Flux2 pipelines do not support negative_prompt, so it is not included in pipeline_kwargs
 
             # Patch VAE.decode to enforce float32 input (avoid bfloat16/float bias mismatch in FLUX VAE)
             # Note: This patch is applied to all pipelines, but is primarily needed for Flux
@@ -649,11 +587,11 @@ class SDNQSamplerV2:
                         return original_vae_decode(z.float(), *args, **kwargs)
                     pipeline.vae.decode = patched_decode
                     if is_flux_family:
-                        print("[SDNQ Sampler V2] Patched VAE.decode to force float32 input (Flux pipeline)")
+                        print("[Flux2 SDNQ Sampler V2] Patched VAE.decode to force float32 input (Flux pipeline)")
                     else:
-                        print("[SDNQ Sampler V2] Patched VAE.decode to force float32 input (non-Flux pipeline)")
+                        print("[Flux2 SDNQ Sampler V2] Patched VAE.decode to force float32 input (non-Flux pipeline)")
                 except Exception as e:
-                    print(f"[SDNQ Sampler V2] Warning: Could not patch VAE.decode: {e}")
+                    print(f"[Flux2 SDNQ Sampler V2] Warning: Could not patch VAE.decode: {e}")
 
             # Patch retrieve_timesteps for FLUX pipelines:
             # - remove `mu` when scheduler doesn't support it
@@ -679,10 +617,10 @@ class SDNQSamplerV2:
 
                     flux2_module.retrieve_timesteps = patched_retrieve_timesteps
                     if not scheduler_supports_mu:
-                        print(f"[SDNQ Sampler V2] Patched retrieve_timesteps to remove mu parameter for {type(pipeline.scheduler).__name__}")
+                        print(f"[Flux2 SDNQ Sampler V2] Patched retrieve_timesteps to remove mu parameter for {type(pipeline.scheduler).__name__}")
                     # (Flux denoise handling is done via `sigmas` + `latents` initialization above.)
                 except Exception as e:
-                    print(f"[SDNQ Sampler V2] Warning: Could not patch retrieve_timesteps: {e}")
+                    print(f"[Flux2 SDNQ Sampler V2] Warning: Could not patch retrieve_timesteps: {e}")
 
             # Try calling pipeline
             try:
@@ -705,11 +643,6 @@ class SDNQSamplerV2:
                         pipeline_kwargs.pop("width", None)
                         pipeline_kwargs.pop("height", None)
                         result = pipeline(**pipeline_kwargs)
-                    if "negative_prompt" in str(e) and "unexpected keyword argument" in str(e):
-                        print(f"[SDNQ Sampler V2] ⚠️  Pipeline {type(pipeline).__name__} doesn't support negative_prompt - skipping it")
-                        if "negative_prompt" in pipeline_kwargs:
-                            del pipeline_kwargs["negative_prompt"]
-                        result = pipeline(**pipeline_kwargs)
                     else:
                         raise
 
@@ -720,7 +653,7 @@ class SDNQSamplerV2:
                 # Extract first image from results
                 image = result.images[0]
 
-                print(f"[SDNQ Sampler V2] Image generated! Size: {image.size}")
+                print(f"[Flux2 SDNQ Sampler V2] Image generated! Size: {image.size}")
 
                 return image
             finally:
@@ -729,16 +662,16 @@ class SDNQSamplerV2:
                     try:
                         import diffusers.pipelines.flux2.pipeline_flux2 as flux2_module
                         flux2_module.retrieve_timesteps = original_retrieve_timesteps
-                        print(f"[SDNQ Sampler V2] Restored original retrieve_timesteps")
+                        print(f"[Flux2 SDNQ Sampler V2] Restored original retrieve_timesteps")
                     except Exception as e:
-                        print(f"[SDNQ Sampler V2] Warning: Could not restore retrieve_timesteps: {e}")
+                        print(f"[Flux2 SDNQ Sampler V2] Warning: Could not restore retrieve_timesteps: {e}")
                 # Restore VAE.decode if patched
                 if original_vae_decode is not None:
                     try:
                         pipeline.vae.decode = original_vae_decode
-                        print("[SDNQ Sampler V2] Restored original VAE.decode")
+                        print("[Flux2 SDNQ Sampler V2] Restored original VAE.decode")
                     except Exception as e:
-                        print(f"[SDNQ Sampler V2] Warning: Could not restore VAE.decode: {e}")
+                        print(f"[Flux2 SDNQ Sampler V2] Warning: Could not restore VAE.decode: {e}")
 
         except InterruptedError:
             raise
@@ -800,12 +733,12 @@ class SDNQSamplerV2:
         # [H, W, C] -> [1, H, W, C]
         tensor = torch.from_numpy(numpy_image)[None, :]
 
-        print(f"[SDNQ Sampler V2] Converted to ComfyUI tensor: shape={tensor.shape}, dtype={tensor.dtype}")
+        print(f"[Flux2 SDNQ Sampler V2] Converted to ComfyUI tensor: shape={tensor.shape}, dtype={tensor.dtype}")
 
         return tensor
 
     def generate(self, model, prompt: str,
-                negative_prompt: str, steps: int, cfg: float, denoise: float, latent_image: dict,
+                steps: int, cfg: float, denoise: float, latent_image: dict,
                 seed: int, scheduler: str) -> Tuple[torch.Tensor]:
         """
         Main generation function called by ComfyUI.
@@ -815,7 +748,6 @@ class SDNQSamplerV2:
         Args:
             model: DiffusionPipeline from SDNQModelLoader (or SDNQLoraLoader if LoRA is needed)
             prompt: Text prompt
-            negative_prompt: Negative prompt
             steps: Inference steps
             cfg: Guidance scale
             denoise: Denoising strength (0.0-1.0)
@@ -831,7 +763,7 @@ class SDNQSamplerV2:
             Exception: For other errors during generation
         """
         print(f"\n{'='*60}")
-        print(f"[SDNQ Sampler V2] Starting generation")
+        print(f"[Flux2 SDNQ Sampler V2] Starting generation")
         print(f"{'='*60}\n")
 
         self.interrupted = False
@@ -842,7 +774,7 @@ class SDNQSamplerV2:
 
             # Handle scheduler swap
             if scheduler != self.current_scheduler:
-                print(f"[SDNQ Sampler V2] Scheduler changed - swapping to {scheduler}...")
+                print(f"[Flux2 SDNQ Sampler V2] Scheduler changed - swapping to {scheduler}...")
                 self.swap_scheduler(pipeline, scheduler)
                 self.current_scheduler = scheduler
 
@@ -852,16 +784,15 @@ class SDNQSamplerV2:
             in_seed = int(seed)
             if in_seed == 0:
                 run_seed = secrets.randbits(64) or 1
-                print(f"[SDNQ Sampler V2] Seed mode: AUTO(0)  input=0  run={run_seed}")
+                print(f"[Flux2 SDNQ Sampler V2] Seed mode: AUTO(0)  input=0  run={run_seed}")
             else:
                 run_seed = in_seed
-                print(f"[SDNQ Sampler V2] Seed mode: FIXED  input={in_seed}  run={run_seed}")
+                print(f"[Flux2 SDNQ Sampler V2] Seed mode: FIXED  input={in_seed}  run={run_seed}")
 
             # Generate image
             pil_image = self.generate_image(
                 pipeline,
                 prompt,
-                negative_prompt,
                 steps,
                 cfg,
                 denoise,
@@ -873,7 +804,7 @@ class SDNQSamplerV2:
             comfy_tensor = self.pil_to_comfy_tensor(pil_image)
 
             print(f"\n{'='*60}")
-            print(f"[SDNQ Sampler V2] Generation complete!")
+            print(f"[Flux2 SDNQ Sampler V2] Generation complete!")
             print(f"{'='*60}\n")
 
             # ComfyUI 0.4+ prefers dict return with "result" and optional "ui".
@@ -884,19 +815,19 @@ class SDNQSamplerV2:
 
         except InterruptedError:
             print(f"\n{'='*60}")
-            print(f"[SDNQ Sampler V2] Generation interrupted")
+            print(f"[Flux2 SDNQ Sampler V2] Generation interrupted")
             print(f"{'='*60}\n")
             raise
 
         except (ValueError, FileNotFoundError) as e:
             print(f"\n{'='*60}")
-            print(f"[SDNQ Sampler V2] Error: {str(e)}")
+            print(f"[Flux2 SDNQ Sampler V2] Error: {str(e)}")
             print(f"{'='*60}\n")
             raise
 
         except Exception as e:
             print(f"\n{'='*60}")
-            print(f"[SDNQ Sampler V2] Unexpected error occurred")
+            print(f"[Flux2 SDNQ Sampler V2] Unexpected error occurred")
             print(f"{'='*60}")
             print(f"Error type: {type(e).__name__}")
             print(f"Error message: {str(e)}")
