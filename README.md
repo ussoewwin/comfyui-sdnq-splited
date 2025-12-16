@@ -118,8 +118,6 @@ Restart ComfyUI after installation.
 
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
 
-**Note**: SDNQ Sampler V2 can also work independently, loading models and generating images in one step (similar to the original repository).
-
 ---
 
 ## Available Models
