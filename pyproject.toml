@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "comfyui-sdnq"
 version = "0.1.0"
-description = "ComfyUI custom node pack for loading SDNQ quantized models with modular node structure. Provides 5 dedicated nodes: SDNQ Model Loader (load SDNQ models), SDNQ LoRA Loader (load LoRAs), SDNQ VAE Encode (encode images to latent space), SDNQ Sampler V2 (image generation for general models), and Flux2 SDNQ Sampler V2 (Flux2-optimized image generation). Enables 50-75% VRAM savings while maintaining quality."
+description = "ComfyUI custom node pack for loading SDNQ quantized models with modular node structure. Provides 5 dedicated nodes: SDNQ Model Loader (load SDNQ models), SDNQ LoRA Loader (load LoRAs), SDNQ VAE Encode (encode images to latent space), SDNQ Sampler V2 (image generation for general models), and Flux2 SDNQ Sampler V2 (Flux2-optimized image generation). Enables 50-75% VRAM savings while maintaining quality. Note: While various models are theoretically supported, development is currently focused specifically on FLUX.2 compatibility; other models have not been tested and their functionality is not guaranteed."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
