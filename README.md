@@ -60,10 +60,11 @@ Restart ComfyUI after installation.
 
 1. Add **SDNQ Model Loader** node (under `loaders/SDNQ`)
 2. Add **SDNQ LoRA Loader** node (optional, under `loaders/SDNQ`)
-3. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`) or **Flux2 SDNQ Sampler V2** node (under `sampling/SDNQ/Flux2`) for Flux2 models
-4. Connect Model Loader → LoRA Loader → Sampler
-5. Select model from dropdown (auto-downloads on first use)
-6. Enter your prompt and click Queue Prompt
+3. Add **SDNQ VAE Encode** node (under `latent/SDNQ`) for image-to-image workflows (optional)
+4. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`) or **Flux2 SDNQ Sampler V2** node (under `sampling/SDNQ/Flux2`) for Flux2 models
+5. Connect Model Loader → LoRA Loader → (VAE Encode) → Sampler
+6. Select model from dropdown (auto-downloads on first use)
+7. Enter your prompt and click Queue Prompt
 
 ---
 
