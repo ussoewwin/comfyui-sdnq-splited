@@ -59,7 +59,7 @@ Restart ComfyUI after installation.
 
 1. Add **SDNQ Model Loader** node (under `loaders/SDNQ`)
 2. Add **SDNQ LoRA Loader** node (optional, under `loaders/SDNQ`)
-3. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`)
+3. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`) or **Flux2 SDNQ Sampler V2** node (under `sampling/SDNQ/Flux2`) for Flux2 models
 4. Connect Model Loader → LoRA Loader → Sampler
 5. Select model from dropdown (auto-downloads on first use)
 6. Enter your prompt and click Queue Prompt
@@ -117,6 +117,40 @@ Restart ComfyUI after installation.
 - SDPA (Scaled Dot Product Attention): Always active - automatic PyTorch 2.0+ optimization
 
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
+
+---
+
+### Flux2 SDNQ Sampler V2
+
+**Category**: `sampling/SDNQ/Flux2`
+
+**Purpose**: Flux2 models (FLUX.2-dev, FLUX.1-dev, etc.) with specialized optimizations for Flow Matching architecture.
+
+**Main Parameters**:
+- `model`: Input from SDNQ Model Loader or SDNQ LoRA Loader (must be Flux2 pipeline)
+- `prompt`: Text prompt for generation
+- `steps`, `cfg`, `seed`: Standard generation controls
+- `latent_image`: Latent input from SDNQ VAE Encode (supports i2i workflows)
+- `denoise`: Denoising strength (0.0-1.0) - controls initial noise level via sigma schedule
+- `scheduler`: FlowMatchEulerDiscreteScheduler (only supported scheduler for Flux2)
+
+**Flux2-Specific Optimizations**:
+- **Flow Matching Support**: Specialized implementation for Flux2's Flow Matching architecture
+- **Advanced i2i Processing**: 
+  - Initializes latents from input image using `pipeline._encode_vae_image()`
+  - Uses sigma schedule (`sigmas`) to control denoise strength accurately
+  - Properly handles `compute_empirical_mu` and `retrieve_timesteps` for Flux2
+- **VAE Compatibility**: Patches VAE.decode to force float32 input (prevents dtype mismatches with Flux2 VAE)
+- **Accurate Denoise Control**: Unlike standard samplers, maintains full step count while adjusting initial noise level via sigma schedule
+
+**When to Use**:
+- **Recommended** for all Flux2 models (FLUX.2-dev, FLUX.1-dev, FLUX.1-schnell, etc.)
+- Provides better i2i (image-to-image) results with Flux2 compared to generic SDNQ Sampler V2
+- More accurate denoise control for Flux2's Flow Matching architecture
+
+**Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
+
+**Note**: This node is specifically optimized for Flux2 pipelines. For other models (SDXL, SD1.5, Qwen, etc.), use **SDNQ Sampler V2** instead.
 
 ---
 
