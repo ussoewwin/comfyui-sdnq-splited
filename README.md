@@ -21,7 +21,8 @@ This fork provides a **modular node structure with split functionality**. The fo
 - **SDNQ Model Loader**: Dedicated node for loading models
 - **SDNQ LoRA Loader**: Dedicated node for loading LoRAs
 - **SDNQ VAE Encode**: Dedicated node for encoding images to latent space (compatible with diffusers VAE)
-- **SDNQ Sampler V2**: Dedicated node for image generation
+- **SDNQ Sampler V2**: Dedicated node for image generation (general models)
+- **Flux2 SDNQ Sampler V2**: Dedicated node for image generation (Flux2-optimized)
 
 This allows you to use SDNQ models with the same workflow structure as standard ComfyUI workflows (Model Load → LoRA Apply → Sampling).
 
