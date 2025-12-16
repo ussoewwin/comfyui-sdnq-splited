@@ -14,6 +14,8 @@ This custom node pack enables running [SDNQ (SD.Next Quantization)](https://gith
 
 > **SDNQ is developed by [Disty0](https://github.com/Disty0)** - this node pack provides ComfyUI integration.
 
+> **⚠️ Important**: While various models (FLUX.2, FLUX.1, SD3.5, etc.) are theoretically supported, **at the moment**, this repository is being developed specifically for FLUX.2. Other models have not been tested and their functionality is not guaranteed at this time. If you encounter issues with non-FLUX.2 models, please be aware that current development focus is on FLUX.2 compatibility.
+
 ## Modular Node Structure
 
 This fork provides a **modular node structure with split functionality**. The following nodes are implemented:
