@@ -1,0 +1,479 @@
+{
+  "id": "a0cbacbf-b9b3-4ab8-b5ec-b3a8a3487181",
+  "revision": 0,
+  "last_node_id": 33,
+  "last_link_id": 39,
+  "nodes": [
+    {
+      "id": 8,
+      "type": "SaveImage",
+      "pos": [
+        1481.7660942187454,
+        963.0333419926319
+      ],
+      "size": [
+        270,
+        400
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 38
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.4.0",
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "CR Prompt Text",
+      "pos": [
+        -1001.697902078703,
+        867.4291502672619
+      ],
+      "size": [
+        496.5,
+        404.84375
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            39
+          ]
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI_Comfyroll_CustomNodes",
+        "ver": "d78b780ae43fcf8c6b7c6505e6ffb4584281ceca",
+        "Node name for S&R": "CR Prompt Text",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "A highly realistic image of a 911T4rga in front of a mansion."
+      ]
+    },
+    {
+      "id": 17,
+      "type": "SDNQModelLoader",
+      "pos": [
+        -238.57671217239613,
+        1108.43962877247
+      ],
+      "size": [
+        278,
+        442
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            14
+          ]
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-sdnq",
+        "ver": "5b76fda293c3c2e433a4c632b7162bee0b7af644",
+        "Node name for S&R": "SDNQModelLoader",
+        "aux_id": "EnragedAntelope/comfyui-sdnq",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "FLUX.2-dev-SDNQ-uint4",
+        "",
+        "bfloat16",
+        "balanced",
+        true,
+        "int8",
+        false,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "id": 22,
+      "type": "SDNQLoraStackerV2_10",
+      "pos": [
+        200.5235927530921,
+        1057.8085828108296
+      ],
+      "size": [
+        493.53125,
+        248
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "visibleLoraCount": 2,
+        "cnr_id": "comfyui-nunchakufluxlorastacker",
+        "ver": "1.17.0",
+        "Node name for S&R": "SDNQLoraStackerV2_10",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "2",
+        "Flux2\\mastermerlin_flux2_911Targa_v2_000004000.safetensors",
+        1,
+        "None",
+        1
+      ]
+    },
+    {
+      "id": 27,
+      "type": "LoadImage",
+      "pos": [
+        -358.97750596592823,
+        405.0716135327129
+      ],
+      "size": [
+        278,
+        432
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            27
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.4.0",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "ComfyUI_07867_.png",
+        "image"
+      ]
+    },
+    {
+      "id": 28,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        243.91855223065,
+        636.62533928634
+      ],
+      "size": [
+        320,
+        146
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.29",
+        "Node name for S&R": "ImageScaleToTotalPixels",
+        "ue_properties": {
+          "version": "7.1",
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "lanczos",
+        1
+      ]
+    },
+    {
+      "id": 30,
+      "type": "SDNQVAEEncode",
+      "pos": [
+        663.8753542370314,
+        766.0294584720549
+      ],
+      "size": [
+        225,
+        102
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 28
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            35
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-sdnq",
+        "ver": "d324d014bc79f2084c02284c4d999d79775e57ca",
+        "Node name for S&R": "SDNQVAEEncode",
+        "aux_id": "ussoewwin/comfyui-sdnq-splited",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 33,
+      "type": "Flux2SDNQSamplerV2",
+      "pos": [
+        946.9807044239569,
+        1027.378991647311
+      ],
+      "size": [
+        400,
+        348
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 36
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 35
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": 39
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-sdnq",
+        "ver": "09d74eb638da1ae901f52a5396c7181f0d9dd120",
+        "Node name for S&R": "Flux2SDNQSamplerV2",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        },
+        "aux_id": "ussoewwin/comfyui-sdnq-splited"
+      },
+      "widgets_values": [
+        "",
+        25,
+        1,
+        669145085961664,
+        "randomize",
+        "FlowMatchEulerDiscreteScheduler",
+        0.7
+      ]
+    }
+  ],
+  "links": [
+    [
+      14,
+      17,
+      0,
+      22,
+      0,
+      "MODEL"
+    ],
+    [
+      25,
+      17,
+      1,
+      30,
+      1,
+      "VAE"
+    ],
+    [
+      27,
+      27,
+      0,
+      28,
+      0,
+      "IMAGE"
+    ],
+    [
+      28,
+      28,
+      0,
+      30,
+      0,
+      "IMAGE"
+    ],
+    [
+      35,
+      30,
+      0,
+      33,
+      1,
+      "LATENT"
+    ],
+    [
+      36,
+      22,
+      0,
+      33,
+      0,
+      "MODEL"
+    ],
+    [
+      38,
+      33,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      39,
+      10,
+      0,
+      33,
+      2,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.37058044150275377,
+      "offset": [
+        1396.1100142854023,
+        -159.23458260677006
+      ]
+    },
+    "frontendVersion": "1.34.8",
+    "workflowRendererVersion": "LG",
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
