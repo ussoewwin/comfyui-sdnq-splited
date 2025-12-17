@@ -10,11 +10,11 @@ We would like to express our deepest gratitude to **EnragedAntelope**, the creat
 
 **Load and run SDNQ quantized models in ComfyUI with 50-75% VRAM savings!**
 
-This custom node pack enables running [SDNQ (SD.Next Quantization)](https://github.com/Disty0/sdnq) models directly in ComfyUI. Run large models like FLUX.2, FLUX.1, SD3.5, and more on consumer hardware with significantly reduced VRAM requirements while maintaining quality.
+This custom node pack enables running [SDNQ (SD.Next Quantization)](https://github.com/Disty0/sdnq) models directly in ComfyUI. **This repository implementation is developed specifically for FLUX.2 only**. Run FLUX.2 models on consumer hardware with significantly reduced VRAM requirements while maintaining quality.
 
 > **SDNQ is developed by [Disty0](https://github.com/Disty0)** - this node pack provides ComfyUI integration.
 
-> **⚠️ Important**: While various models (FLUX.2, FLUX.1, SD3.5, etc.) are theoretically supported, **at the moment**, this repository is being developed specifically for **FLUX.2**. Other models have not been tested and their functionality is not guaranteed at this time. If you encounter issues with non-FLUX.2 models, please be aware that current development focus is on **FLUX.2 compatibility**.
+> **⚠️ Important**: **This repository is developed specifically for FLUX.2 only**. While SDNQ technology supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2. Do not use this repository with non-FLUX.2 models.
 
 ## Modular Node Structure
 
@@ -38,7 +38,7 @@ This allows you to use SDNQ models with the same workflow structure as standard 
 - **🚀 VRAM Savings**: 50-75% memory reduction with quantization
 - **⚡ Performance Optimizations**: Optional xFormers, Flash Attention (FA), Sage Attention (SA), VAE tiling, SDPA (automatic)
 - **🎯 LoRA Support**: Load LoRAs from ComfyUI loras folder via dedicated loader node
-- **📅 Multi-Scheduler**: 14 schedulers (FLUX/SD3 flow-match + traditional diffusion)
+- **📅 Scheduler Support**: FlowMatchEulerDiscreteScheduler for FLUX.2 models
 - **🔧 Memory Modes**: GPU (fastest), balanced (12-16GB VRAM), lowvram (8GB VRAM)
 
 ---
@@ -144,7 +144,7 @@ This workflow requires the following additional custom nodes:
 - `model`: Input from SDNQ Model Loader or SDNQ LoRA Loader
 - `prompt` / `negative_prompt`: What to create / what to avoid
 - `steps`, `cfg`, `width`, `height`, `seed`: Standard generation controls
-- `scheduler`: FlowMatchEulerDiscreteScheduler (FLUX/SD3) or traditional samplers
+- `scheduler`: FlowMatchEulerDiscreteScheduler (FLUX.2 only)
 
 **Performance Optimizations** (optional):
 - `use_xformers`: Memory-efficient attention (safe to try, auto-fallback to SDPA)
@@ -155,7 +155,7 @@ This workflow requires the following additional custom nodes:
 
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
 
-**Note**: This node is currently focused on FLUX.2 development. Other models (SDXL, SD1.5, Qwen, etc.) have not been tested and their functionality is not guaranteed.
+**Note**: This node is for FLUX.2 only. While SDNQ supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2 only. Do not use with other models.
 
 ---
 
@@ -189,21 +189,20 @@ This workflow requires the following additional custom nodes:
 
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
 
-**Note**: This node is specifically optimized for Flux2 pipelines. For other models (SDXL, SD1.5, Qwen, etc.), use **SDNQ Sampler V2** instead.
+**Note**: This node is specifically optimized for FLUX.2 pipelines only. Do not use with other models.
 
 ---
 
 ## Available Models
 
-30+ pre-configured models including:
-- **FLUX**: FLUX.1-dev, FLUX.1-schnell, FLUX.2-dev, FLUX.1-Krea, FLUX.1-Kontext
-- **Qwen**: Qwen-Image variants (Edit, Lightning, Turbo)
-- **SD3/SDXL**: SD3-Medium, SD3.5-Large, NoobAI-XL variants
-- **Others**: Z-Image-Turbo, Chroma1-HD, HunyuanImage3, Video models
+**FLUX.2 models only** - Other models are NOT supported.
 
-Most available in uint4 (max VRAM savings) or int8 (best quality). Browse: https://huggingface.co/collections/Disty0/sdnq
+Pre-configured FLUX.2 models include:
+- FLUX.2-dev (various quantization levels)
 
-**Note**: While the models listed above are theoretically supported, **at the moment**, this repository is being developed specifically for FLUX.2. Other models have not been tested and their functionality is not guaranteed at this time. If you encounter issues with non-FLUX.2 models, please be aware that current development focus is on FLUX.2 compatibility.
+Models are available in uint4 (max VRAM savings) or int8 (best quality). Browse SDNQ quantized models: https://huggingface.co/collections/Disty0/sdnq
+
+**⚠️ Important**: **This repository supports FLUX.2 models only**. While SDNQ technology supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2 only. Do not use with other models.
 
 ---
 
@@ -217,8 +216,7 @@ Most available in uint4 (max VRAM savings) or int8 (best quality). Browse: https
 - Use `enable_vae_tiling=True` for large images (>1536px) to prevent OOM
 
 **Scheduler Selection**:
-- FLUX/SD3/Qwen/Z-Image: Use `FlowMatchEulerDiscreteScheduler`
-- SDXL/SD1.5: Use `DPMSolverMultistepScheduler`, `EulerDiscreteScheduler`, or `UniPCMultistepScheduler`
+- FLUX.2: Use `FlowMatchEulerDiscreteScheduler` (only scheduler supported)
 - Wrong scheduler = broken images!
 
 ---
