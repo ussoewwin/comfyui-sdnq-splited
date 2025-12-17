@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comfyui-sdnq"
-version = "0.1.0"
+version = "1.0.0"
 description = "ComfyUI custom node pack for SDNQ quantized models with a modular split-node architecture. Forked from EnragedAntelope/comfyui-sdnq and redesigned into dedicated nodes. Provides 5 dedicated nodes: SDNQ Model Loader, SDNQ LoRA Loader, SDNQ VAE Encode, SDNQ Sampler V2 (general models), and Flux2 SDNQ Sampler V2 (Flux2-optimized). Enables 50-75% VRAM savings while maintaining quality. Note: Currently focused on FLUX.2 development; other models not tested."
 readme = "README.md"
 requires-python = ">=3.10"
