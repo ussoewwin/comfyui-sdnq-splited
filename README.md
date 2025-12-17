@@ -21,7 +21,7 @@ This custom node pack enables running [SDNQ (SD.Next Quantization)](https://gith
 This fork provides a **modular node structure with split functionality**. The following nodes are implemented:
 
 - **SDNQ Model Loader**: Dedicated node for loading models
-- **SDNQ LoRA Loader**: Dedicated node for loading LoRAs
+- **SDNQ LoRA Loader**: Dedicated node for loading LoRAs (also available as **SDNQ LoRA Stacker V2** in [ComfyUI-NunchakuFluxLoraStacker](https://github.com/ussoewwin/ComfyUI-NunchakuFluxLoraStacker) with dynamic 10-slot UI)
 - **SDNQ VAE Encode**: Dedicated node for encoding images to latent space (compatible with diffusers VAE)
 - **SDNQ Sampler V2**: Dedicated node for image generation (general models)
 - **Flux2 SDNQ Sampler V2**: Dedicated node for image generation (Flux2-optimized)
@@ -132,6 +132,8 @@ This workflow requires the following additional custom nodes:
 
 **Outputs**: `MODEL` (connects to SDNQ Sampler V2)
 
+**Note**: For advanced LoRA stacking with dynamic 10-slot UI, see [SDNQ LoRA Stacker V2](https://github.com/ussoewwin/ComfyUI-NunchakuFluxLoraStacker) in the ComfyUI-NunchakuFluxLoraStacker repository.
+
 ---
 
 ### SDNQ Sampler V2
@@ -152,6 +154,8 @@ This workflow requires the following additional custom nodes:
 - SDPA (Scaled Dot Product Attention): Always active - automatic PyTorch 2.0+ optimization
 
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
+
+**Note**: This node is currently focused on FLUX.2 development. Other models (SDXL, SD1.5, Qwen, etc.) have not been tested and their functionality is not guaranteed.
 
 ---
 
