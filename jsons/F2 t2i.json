@@ -1,0 +1,498 @@
+{
+  "id": "a0cbacbf-b9b3-4ab8-b5ec-b3a8a3487181",
+  "revision": 0,
+  "last_node_id": 27,
+  "last_link_id": 26,
+  "nodes": [
+    {
+      "id": 8,
+      "type": "SaveImage",
+      "pos": [
+        1346.18655479388,
+        1109.726278257357
+      ],
+      "size": [
+        270,
+        400
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 23
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.4.0",
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "CR Prompt Text",
+      "pos": [
+        -978.8018498238516,
+        896.8667072160695
+      ],
+      "size": [
+        496.5,
+        404.84375
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            26
+          ]
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI_Comfyroll_CustomNodes",
+        "ver": "d78b780ae43fcf8c6b7c6505e6ffb4584281ceca",
+        "Node name for S&R": "CR Prompt Text",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "Beatrix Potter drawing style, BPstyle drawing, mother rabbit hugging her (2 babys), snow scene,pathetic, sad, sitting on the paveway, paper next to her titling:\"Why can't people stop war and discrimination?\", "
+      ]
+    },
+    {
+      "id": 17,
+      "type": "SDNQModelLoader",
+      "pos": [
+        -238.57697026030462,
+        1108.4387140372373
+      ],
+      "size": [
+        278,
+        442
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            14
+          ]
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "EnragedAntelope/comfyui-sdnq",
+        "ver": "5b76fda293c3c2e433a4c632b7162bee0b7af644",
+        "Node name for S&R": "SDNQModelLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "FLUX.2-dev-SDNQ-uint4",
+        "",
+        "bfloat16",
+        "balanced",
+        true,
+        "int8",
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    {
+      "id": 22,
+      "type": "SDNQLoraStackerV2_10",
+      "pos": [
+        270.7703952157591,
+        1013.4845194536153
+      ],
+      "size": [
+        355.390625,
+        248
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "visibleLoraCount": 2,
+        "cnr_id": "comfyui-nunchakufluxlorastacker",
+        "ver": "1.17.0",
+        "Node name for S&R": "SDNQLoraStackerV2_10",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "2",
+        "None",
+        1,
+        "None",
+        1
+      ]
+    },
+    {
+      "id": 23,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        256.04363060934486,
+        1343.3315419106243
+      ],
+      "size": [
+        270,
+        180
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 17
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.4.0",
+        "Node name for S&R": "EmptySD3LatentImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        2048,
+        2048,
+        1
+      ]
+    },
+    {
+      "id": 24,
+      "type": "MegapixelCalculatorNode",
+      "pos": [
+        -261.10164633351303,
+        1620.633254262609
+      ],
+      "size": [
+        312.890625,
+        320
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            17
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            18
+          ]
+        },
+        {
+          "name": "resolution",
+          "type": "STRING",
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_controlaltai_nodes",
+        "ver": "721492b66c9cede8ae23ae10615462ad80cfd061",
+        "Node name for S&R": "MegapixelCalculatorNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "2.0",
+        "1:1 (Perfect Square)",
+        "64",
+        false,
+        "1:1"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "ShowText|pysssss",
+      "pos": [
+        320.0723242340481,
+        1628.139187006001
+      ],
+      "size": [
+        225,
+        154
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "f2838ed5e59de4d73cde5c98354b87a8d3200190",
+        "Node name for S&R": "ShowText|pysssss",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "1408 x 1408"
+      ]
+    },
+    {
+      "id": 27,
+      "type": "Flux2SDNQSamplerV2",
+      "pos": [
+        803.4987726575015,
+        1086.1837635354166
+      ],
+      "size": [
+        400,
+        348
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 21
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 22
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "ussoewwin/comfyui-sdnq-splited",
+        "ver": "d324d014bc79f2084c02284c4d999d79775e57ca",
+        "Node name for S&R": "Flux2SDNQSamplerV2",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        20,
+        1,
+        0,
+        "randomize",
+        "FlowMatchEulerDiscreteScheduler",
+        1
+      ]
+    }
+  ],
+  "links": [
+    [
+      14,
+      17,
+      0,
+      22,
+      0,
+      "MODEL"
+    ],
+    [
+      17,
+      24,
+      0,
+      23,
+      0,
+      "INT"
+    ],
+    [
+      18,
+      24,
+      1,
+      23,
+      1,
+      "INT"
+    ],
+    [
+      19,
+      24,
+      2,
+      25,
+      0,
+      "STRING"
+    ],
+    [
+      21,
+      22,
+      0,
+      27,
+      0,
+      "MODEL"
+    ],
+    [
+      22,
+      23,
+      0,
+      27,
+      1,
+      "LATENT"
+    ],
+    [
+      23,
+      27,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      26,
+      10,
+      0,
+      27,
+      2,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.336891310457045,
+      "offset": [
+        1603.692282517826,
+        -475.90041885142216
+      ]
+    },
+    "frontendVersion": "1.34.8",
+    "workflowRendererVersion": "LG",
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
