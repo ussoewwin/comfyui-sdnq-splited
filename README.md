@@ -70,6 +70,38 @@ Restart ComfyUI after installation.
 
 ---
 
+## Sample Workflows
+
+### Text-to-Image (t2i) Workflow
+
+A complete example workflow demonstrating Flux2 text-to-image generation with SDNQ models.
+
+**Files:**
+- Workflow JSON: [`jsons/F2 t2i.json`](jsons/F2%20t2i.json)
+- Example Output: [`jsons/t2i.png`](jsons/t2i.png)
+
+![Example t2i Output](jsons/t2i.png)
+
+**Required Additional Nodes:**
+
+This workflow requires the following additional custom nodes:
+
+1. **[ComfyUI-NunchakuFluxLoraStacker](https://github.com/ussoewwin/ComfyUI-NunchakuFluxLoraStacker)**
+   - Required for LoRA loading functionality in the workflow
+   - Install via ComfyUI Manager or manually clone to `custom_nodes/`
+
+2. **[ControlAltAI-Nodes-fixed-Python3.13](https://github.com/ussoewwin/ControlAltAI-Nodes-fixed-Python3.13)**
+   - Required for additional workflow features
+   - Install via ComfyUI Manager or manually clone to `custom_nodes/`
+
+**Usage:**
+1. Install the required additional nodes listed above
+2. Load the workflow JSON file (`F2 t2i.json`) in ComfyUI
+3. Adjust model, prompts, and parameters as needed
+4. Click "Queue Prompt" to generate
+
+---
+
 ## Node Reference
 
 ### SDNQ Model Loader
