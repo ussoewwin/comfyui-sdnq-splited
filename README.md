@@ -242,16 +242,6 @@ If you see "xFormers not available" but have it installed:
 - SDPA provides good performance without xFormers
 - If xFormers is incompatible with your GPU/model, fallback is automatic
 
-### Performance is Slow
-
-**Balanced/lowvram modes**: Inherently slower due to CPU↔GPU data movement. Options:
-- Enable the xFormers option in the UI (if compatible)
-- Enable the Flash Attention (FA) option in the UI
-- Enable the Sage Attention (SA) option in the UI
-- SDPA is always active for automatic optimization
-- Upgrade to more VRAM for full GPU mode
-- Use smaller model (uint4 vs int8)
-
 ### Out of Memory
 
 1. Use lower memory mode (gpu → balanced → lowvram)
