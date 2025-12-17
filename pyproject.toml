@@ -48,7 +48,7 @@ Issues = "https://github.com/ussoewwin/comfyui-sdnq-splited/issues"
 
 [tool.comfy]
 PublisherId = "ussoewwin"
-DisplayName = "SDNQ Splited"
+DisplayName = "ComfyUI-SDNQ-Splited"
 Icon = "https://raw.githubusercontent.com/ussoewwin/comfyui-sdnq-splited/main/logo-transparent.png"
 categories = ["loaders", "sampling"]
 tags = ["sdnq", "quantization", "low-vram", "diffusers", "flux", "flux2", "flow-matching", "modular", "lora", "vae", "sampler"]
