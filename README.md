@@ -93,6 +93,23 @@ This workflow requires the following additional custom nodes:
    - Required for additional workflow features
    - Install via ComfyUI Manager or manually clone to `custom_nodes/`
 
+### Image-to-Image (i2i) Workflow
+
+A complete example workflow demonstrating Flux2 image-to-image generation with SDNQ models.
+
+**Files:**
+- Workflow JSON: [`jsons/F2 i2i.json`](jsons/F2%20i2i.json)
+
+<img src="jsons/i2i.png" alt="Example i2i Output" width="600">
+
+**Required Additional Nodes:**
+
+This workflow requires the following additional custom node:
+
+1. **[ComfyUI-NunchakuFluxLoraStacker](https://github.com/ussoewwin/ComfyUI-NunchakuFluxLoraStacker)**
+   - Required for LoRA loading functionality in the workflow
+   - Install via ComfyUI Manager or manually clone to `custom_nodes/`
+
 **Usage:**
 1. Install the required additional nodes listed above
 2. Load the workflow JSON file (`F2 t2i.json`) in ComfyUI
