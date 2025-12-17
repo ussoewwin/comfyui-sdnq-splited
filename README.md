@@ -14,7 +14,7 @@ This custom node pack enables running [SDNQ (SD.Next Quantization)](https://gith
 
 > **SDNQ is developed by [Disty0](https://github.com/Disty0)** - this node pack provides ComfyUI integration.
 
-> **⚠️ Important**: **This repository is developed specifically for FLUX.2 only**. While SDNQ technology supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2. Do not use this repository with non-FLUX.2 models.
+> **⚠️ Important**: **This repository is developed specifically for FLUX.2 only**. While SDNQ technology supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2. Other models have not been tested.
 
 ## Modular Node Structure
 
@@ -134,6 +134,8 @@ This workflow requires the following additional custom nodes:
 
 **Note**: For advanced LoRA stacking with dynamic 10-slot UI, see [SDNQ LoRA Stacker V2](https://github.com/ussoewwin/ComfyUI-NunchakuFluxLoraStacker) in the ComfyUI-NunchakuFluxLoraStacker repository.
 
+**Note**: This node is for FLUX.2 only. While SDNQ supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2 only. Other models have not been tested.
+
 ---
 
 ### SDNQ Sampler V2
@@ -155,7 +157,7 @@ This workflow requires the following additional custom nodes:
 
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
 
-**Note**: This node is for FLUX.2 only. While SDNQ supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2 only. Do not use with other models.
+**Note**: This node is for FLUX.2 only. While SDNQ supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2 only. Other models have not been tested.
 
 ---
 
@@ -189,20 +191,20 @@ This workflow requires the following additional custom nodes:
 
 **Outputs**: `IMAGE` (connects to SaveImage, Preview, etc.)
 
-**Note**: This node is specifically optimized for FLUX.2 pipelines only. Do not use with other models.
+**Note**: This node is specifically optimized for FLUX.2 pipelines only. Other models have not been tested.
 
 ---
 
 ## Available Models
 
-**FLUX.2 models only** - Other models are NOT supported.
+**FLUX.2 models only** - Other models have not been tested.
 
 Pre-configured FLUX.2 models include:
 - FLUX.2-dev (various quantization levels)
 
 Models are available in uint4 (max VRAM savings) or int8 (best quality). Browse SDNQ quantized models: https://huggingface.co/collections/Disty0/sdnq
 
-**⚠️ Important**: **This repository supports FLUX.2 models only**. While SDNQ technology supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2 only. Do not use with other models.
+**⚠️ Important**: **This repository supports FLUX.2 models only**. While SDNQ technology supports other large-scale models (FLUX.1, Qwen Image, etc.), this implementation focuses on FLUX.2 only. Other models have not been tested.
 
 ---
 
