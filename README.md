@@ -78,7 +78,6 @@ A complete example workflow demonstrating Flux2 text-to-image generation with SD
 
 **Files:**
 - Workflow JSON: [`jsons/F2 t2i.json`](jsons/F2%20t2i.json)
-- Example Output: [`jsons/t2i.png`](jsons/t2i.png)
 
 <img src="jsons/t2i.png" alt="Example t2i Output" width="600">
 

@@ -132,8 +132,7 @@ class Flux2SDNQSamplerV2:
                     "default": 0,
                     "min": 0,
                     "max": 0xffffffffffffffff,
-                    "control_after_generate": True,
-                    "tooltip": "The random seed used for creating the noise. Seed=0 will randomize each run and update this field after generation."
+                    "tooltip": "The random seed used for creating the noise. Seed=0 will randomize each run. Seed>=1 will use the specified value."
                 }),
 
                 "scheduler": (scheduler_list, {
@@ -778,12 +777,14 @@ class Flux2SDNQSamplerV2:
                 self.swap_scheduler(pipeline, scheduler)
                 self.current_scheduler = scheduler
 
-            # Seed handling (stateless, robust):
-            # - seed==0: randomize every run, but DO NOT overwrite the UI seed (keep 0) so subsequent runs stay random.
-            # - seed!=0: fixed.
+            # Seed handling:
+            # - seed==0: randomize every run
+            # - seed>=1: use the specified seed value
             in_seed = int(seed)
             if in_seed == 0:
-                run_seed = secrets.randbits(64) or 1
+                run_seed = secrets.randbits(64)
+                if run_seed == 0:
+                    run_seed = 1
                 print(f"[Flux2 SDNQ Sampler V2] Seed mode: AUTO(0)  input=0  run={run_seed}")
             else:
                 run_seed = in_seed
@@ -808,10 +809,10 @@ class Flux2SDNQSamplerV2:
             print(f"{'='*60}\n")
 
             # ComfyUI 0.4+ prefers dict return with "result" and optional "ui".
-            # IMPORTANT: when seed==0, we keep the widget value at 0 so the user can keep getting random seeds.
-            if in_seed == 0:
-                return {"result": (comfy_tensor,)}
-            return {"result": (comfy_tensor,), "ui": {"seed": [int(run_seed)]}}
+            # IMPORTANT: 
+            # - seed==0: keep widget value at 0 so user can keep getting random seeds (don't update UI)
+            # - seed>=1: keep the user-specified value (don't update UI to avoid changing what user set)
+            return {"result": (comfy_tensor,)}
 
         except InterruptedError:
             print(f"\n{'='*60}")
