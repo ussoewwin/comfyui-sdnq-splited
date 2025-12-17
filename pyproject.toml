@@ -50,6 +50,8 @@ Issues = "https://github.com/ussoewwin/comfyui-sdnq-splited/issues"
 PublisherId = "ussoewwin"
 DisplayName = "SDNQ Splited"
 Icon = ""  # Optional: Add icon URL if available
+categories = ["loaders", "sampling"]
+tags = ["sdnq", "quantization", "low-vram", "diffusers", "flux", "flux2", "flow-matching", "modular", "lora", "vae", "sampler"]
 
 [tool.setuptools]
 packages = ["nodes", "core"]
