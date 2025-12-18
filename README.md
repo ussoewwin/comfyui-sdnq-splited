@@ -54,6 +54,28 @@ pip install -r requirements.txt
 
 Restart ComfyUI after installation.
 
+### Installation via ComfyUI Manager
+
+This custom node is also available via ComfyUI Manager. However, if you encounter the following error:
+
+```
+With the current security level configuration,
+only custom nodes from the "default channel" can be installed.
+```
+
+This is due to ComfyUI's security level restrictions. Newly registered nodes are not automatically in the "default channel" until they gain wider adoption. This is **not an error with the repository or registry registration** - the node is correctly registered and functional.
+
+**Solutions:**
+
+1. **Lower ComfyUI Security Level** (Recommended)
+   - Go to ComfyUI Settings → Security Level
+   - Change from "Strict" to "Normal" or "Disabled"
+   - Then try installing via ComfyUI Manager again
+
+2. **Install via Git URL** (Always available)
+   - In ComfyUI Manager, use "Install via Git URL"
+   - Enter: `https://github.com/ussoewwin/comfyui-sdnq-splited`
+
 ---
 
 ## Quick Start
