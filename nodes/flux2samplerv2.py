@@ -492,14 +492,8 @@ class Flux2SDNQSamplerV2:
                         pipeline_kwargs["sigmas"] = sigmas
 
                         # Prepare image tensor exactly like the pipeline does
+                        # Note: For i2i mode, preserve input image size (do not resize to 1024x1024)
                         img_w, img_h = pil_cond.size
-                        if img_w * img_h > 1024 * 1024:
-                            try:
-                                pil_cond = pipeline.image_processor._resize_to_target_area(pil_cond, 1024 * 1024)
-                                pipeline_kwargs["image"] = pil_cond
-                                img_w, img_h = pil_cond.size
-                            except Exception:
-                                pass
 
                         multiple_of = int(getattr(pipeline, "vae_scale_factor", 16)) * 2
                         if multiple_of > 0:
