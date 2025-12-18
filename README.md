@@ -300,6 +300,15 @@ Contributions welcome! Please:
 
 ---
 
+## Changelog
+
+### Version 1.0.2
+
+- **Fixed 1024 fixed size issue in i2i mode**: Flux2 SDNQ Sampler V2's image-to-image mode now preserves input image size instead of forcing 1024×1024 output
+- **Code cleanup**: Removed backup files and cleaned up repository structure
+
+---
+
 ## License
 
 Apache License 2.0 - See [LICENSE](LICENSE)
