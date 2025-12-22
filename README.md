@@ -153,14 +153,18 @@ A complete example workflow demonstrating Flux2 generation with torch.compile op
 
 **Required Additional Nodes:**
 
-This workflow requires the following additional custom node:
+This workflow requires the following additional custom nodes:
 
 1. **[ComfyUI-NunchakuFluxLoraStacker](https://github.com/ussoewwin/ComfyUI-NunchakuFluxLoraStacker)**
    - Required for LoRA loading functionality in the workflow
    - Install via ComfyUI Manager or manually clone to `custom_nodes/`
 
+2. **[ControlAltAI-Nodes-fixed-Python3.13](https://github.com/ussoewwin/ControlAltAI-Nodes-fixed-Python3.13)**
+   - Required for additional workflow features
+   - Install via ComfyUI Manager or manually clone to `custom_nodes/`
+
 **Usage:**
-1. Install the required additional node listed above
+1. Install the required additional nodes listed above
 2. Load the workflow JSON file (`torch_compile.json`) in ComfyUI
 3. The workflow demonstrates how to use Flux2 SDNQ TorchCompile node between Model Loader and Sampler
 4. First run will be slower due to compilation overhead (30-60 seconds), subsequent runs will be faster
