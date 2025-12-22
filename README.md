@@ -85,14 +85,14 @@ This is due to ComfyUI's security level restrictions. Newly registered nodes are
 
 1. Add **SDNQ Model Loader** node (under `loaders/SDNQ`)
 2. Add **SDNQ LoRA Loader** node (optional, under `loaders/SDNQ`)
-3. Add **Flux2 SDNQ TorchCompile** node (optional, under `SDNQ/torchcompile`) for performance optimization
-4. Add **SDNQ VAE Encode** node (under `latent/SDNQ`) for image-to-image workflows (optional)
-5. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`) or **Flux2 SDNQ Sampler V2** node (under `sampling/SDNQ/Flux2`) for Flux2 models
-6. Connect Model Loader → LoRA Loader → (TorchCompile) → (VAE Encode) → Sampler
+3. Add **SDNQ VAE Encode** node (optional, under `latent/SDNQ`) for image-to-image workflows
+4. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`) or **Flux2 SDNQ Sampler V2** node (under `sampling/SDNQ/Flux2`) for Flux2 models
+5. Add **Flux2 SDNQ TorchCompile** node (optional, under `SDNQ/torchcompile`) for performance optimization
+6. Connect nodes: Model Loader → LoRA Loader → (TorchCompile) → (VAE Encode) → Sampler
+   - TorchCompile and VAE Encode are optional but recommended
 7. Select model from dropdown (auto-downloads on first use)
 8. Enter your prompt and click Queue Prompt
 
-**Note**: TorchCompile is optional but recommended for better performance. Place it between Model Loader/LoRA Loader and Sampler nodes.
 
 ---
 
