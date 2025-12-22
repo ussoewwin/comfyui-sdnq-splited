@@ -295,9 +295,7 @@ This workflow requires the following additional custom nodes:
 **Outputs**: `MODEL` (connects to Flux2 SDNQ Sampler V2 or SDNQ Sampler V2)
 
 **Supported Model Types**:
-- DiffusionPipeline (comfyui-sdnq-splited SDNQ models)
-- Nunchaku Flux2 models (ComfyFluxWrapper)
-- Standard ComfyUI Flux models
+- Flux2 SDNQ models (e.g., Flux2 SDNQ-UNIT4) loaded via SDNQ Model Loader
 
 **Performance Notes**:
 - **First Run**: Compilation overhead (~30-60 seconds) - compiles the computational graph
@@ -414,7 +412,7 @@ Contributions welcome! Please:
 ### Version 1.0.3
 
 - **Added Flux2 SDNQ TorchCompile node**: New performance optimization node using PyTorch 2.0+ torch.compile for faster inference
-  - Supports DiffusionPipeline, Nunchaku Flux2, and standard ComfyUI Flux models
+  - Supports Flux2 SDNQ models (e.g., Flux2 SDNQ-UNIT4) loaded via SDNQ Model Loader
   - Configurable compilation backend, mode, and block selection
   - Approximately 30% speedup on subsequent runs after initial compilation
   - Added torch.compile workflow sample with documentation
