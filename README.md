@@ -411,6 +411,14 @@ Contributions welcome! Please:
 
 ## Changelog
 
+### Version 1.0.3
+
+- **Added Flux2 SDNQ TorchCompile node**: New performance optimization node using PyTorch 2.0+ torch.compile for faster inference
+  - Supports DiffusionPipeline, Nunchaku Flux2, and standard ComfyUI Flux models
+  - Configurable compilation backend, mode, and block selection
+  - Approximately 30% speedup on subsequent runs after initial compilation
+  - Added torch.compile workflow sample with documentation
+
 ### Version 1.0.2
 
 - **Fixed 1024 fixed size issue in i2i mode**: Flux2 SDNQ Sampler V2's image-to-image mode now preserves input image size instead of forcing 1024×1024 output
