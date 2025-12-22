@@ -237,7 +237,7 @@ This workflow requires the following additional custom nodes:
 
 **Category**: `sampling/SDNQ/Flux2`
 
-**Purpose**: Flux2 models (FLUX.2-dev, FLUX.1-dev, etc.) with specialized optimizations for Flow Matching architecture.
+**Purpose**: Flux2 models (FLUX.2-dev) with specialized optimizations for Flow Matching architecture.
 
 **Main Parameters**:
 - `model`: Input from SDNQ Model Loader or SDNQ LoRA Loader (must be Flux2 pipeline)
@@ -257,7 +257,7 @@ This workflow requires the following additional custom nodes:
 - **Accurate Denoise Control**: Unlike standard samplers, maintains full step count while adjusting initial noise level via sigma schedule
 
 **When to Use**:
-- **Recommended** for all Flux2 models (FLUX.2-dev, FLUX.1-dev, FLUX.1-schnell, etc.)
+- **Recommended** for FLUX.2 models (FLUX.2-dev)
 - Provides better i2i (image-to-image) results with Flux2 compared to generic SDNQ Sampler V2
 - More accurate denoise control for Flux2's Flow Matching architecture
 
