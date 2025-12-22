@@ -13,6 +13,7 @@ from .nodes.flux2samplerv2 import Flux2SDNQSamplerV2
 from .nodes.model_loader import SDNQModelLoader
 from .nodes.lora_loader import SDNQLoraLoader
 from .nodes.vae_encode import SDNQVAEEncode
+from .nodes.torch_compile_flux import Flux2SDNQTorchCompile
 
 # ============================================================================
 # V1 API - Node Registration (ComfyUI Standard)
@@ -24,6 +25,7 @@ NODE_CLASS_MAPPINGS = {
     "SDNQModelLoader": SDNQModelLoader,
     "SDNQLoraLoader": SDNQLoraLoader,
     "SDNQVAEEncode": SDNQVAEEncode,
+    "Flux2SDNQTorchCompile": Flux2SDNQTorchCompile,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -32,6 +34,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SDNQModelLoader": "SDNQ Model Loader",
     "SDNQLoraLoader": "SDNQ LoRA Loader",
     "SDNQVAEEncode": "SDNQ VAE Encode",
+    "Flux2SDNQTorchCompile": "Flux2 SDNQ TorchCompile",
 }
 
 # ============================================================================

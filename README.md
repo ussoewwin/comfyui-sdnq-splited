@@ -25,6 +25,7 @@ This fork provides a **modular node structure with split functionality**. The fo
 - **SDNQ VAE Encode**: Dedicated node for encoding images to latent space (compatible with diffusers VAE)
 - **SDNQ Sampler V2**: Dedicated node for image generation (general models)
 - **Flux2 SDNQ Sampler V2**: Dedicated node for image generation (Flux2-optimized)
+- **Flux2 SDNQ TorchCompile**: Performance optimization node using PyTorch 2.0+ torch.compile for faster inference
 
 This allows you to use SDNQ models with the same workflow structure as standard ComfyUI workflows (Model Load → LoRA Apply → Sampling).
 
@@ -84,11 +85,14 @@ This is due to ComfyUI's security level restrictions. Newly registered nodes are
 
 1. Add **SDNQ Model Loader** node (under `loaders/SDNQ`)
 2. Add **SDNQ LoRA Loader** node (optional, under `loaders/SDNQ`)
-3. Add **SDNQ VAE Encode** node (under `latent/SDNQ`) for image-to-image workflows (optional)
-4. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`) or **Flux2 SDNQ Sampler V2** node (under `sampling/SDNQ/Flux2`) for Flux2 models
-5. Connect Model Loader → LoRA Loader → (VAE Encode) → Sampler
-6. Select model from dropdown (auto-downloads on first use)
-7. Enter your prompt and click Queue Prompt
+3. Add **Flux2 SDNQ TorchCompile** node (optional, under `SDNQ/torchcompile`) for performance optimization
+4. Add **SDNQ VAE Encode** node (under `latent/SDNQ`) for image-to-image workflows (optional)
+5. Add **SDNQ Sampler V2** node (under `sampling/SDNQ`) or **Flux2 SDNQ Sampler V2** node (under `sampling/SDNQ/Flux2`) for Flux2 models
+6. Connect Model Loader → LoRA Loader → (TorchCompile) → (VAE Encode) → Sampler
+7. Select model from dropdown (auto-downloads on first use)
+8. Enter your prompt and click Queue Prompt
+
+**Note**: TorchCompile is optional but recommended for better performance. Place it between Model Loader/LoRA Loader and Sampler nodes.
 
 ---
 
@@ -137,6 +141,31 @@ This workflow requires the following additional custom node:
 2. Load the workflow JSON file (`F2 t2i.json`) in ComfyUI
 3. Adjust model, prompts, and parameters as needed
 4. Click "Queue Prompt" to generate
+
+### TorchCompile Optimization Workflow
+
+A complete example workflow demonstrating Flux2 generation with torch.compile optimization for improved performance.
+
+**Files:**
+- Workflow JSON: [`jsons/torch_compile.json`](jsons/torch_compile.json)
+
+<img src="jsons/torch_compile.png" alt="Example TorchCompile Workflow" width="600">
+
+**Required Additional Nodes:**
+
+This workflow requires the following additional custom node:
+
+1. **[ComfyUI-NunchakuFluxLoraStacker](https://github.com/ussoewwin/ComfyUI-NunchakuFluxLoraStacker)**
+   - Required for LoRA loading functionality in the workflow
+   - Install via ComfyUI Manager or manually clone to `custom_nodes/`
+
+**Usage:**
+1. Install the required additional node listed above
+2. Load the workflow JSON file (`torch_compile.json`) in ComfyUI
+3. The workflow demonstrates how to use Flux2 SDNQ TorchCompile node between Model Loader and Sampler
+4. First run will be slower due to compilation overhead (30-60 seconds), subsequent runs will be faster
+5. Adjust model, prompts, and TorchCompile parameters as needed
+6. Click "Queue Prompt" to generate
 
 ---
 
@@ -234,6 +263,54 @@ This workflow requires the following additional custom node:
 
 ---
 
+### Flux2 SDNQ TorchCompile
+
+**Category**: `SDNQ/torchcompile`
+
+**Purpose**: Performance optimization node that uses PyTorch 2.0+ `torch.compile` to accelerate Flux2 model inference. Compiles the transformer blocks to optimize computation graphs, resulting in faster generation speeds after an initial compilation phase.
+
+**Main Parameters**:
+- `model`: Input from SDNQ Model Loader or SDNQ LoRA Loader (MODEL input)
+- `backend`: Compilation backend
+  - `inductor`: Default PyTorch Inductor backend (recommended)
+  - `cudagraphs`: CUDA Graphs backend
+- `mode`: Compilation optimization mode
+  - `default`: Balanced speed/compile time
+  - `max-autotune`: Best for latency (uses inductor + CUDA graphs, recommended)
+  - `max-autotune-no-cudagraphs`: Max optimization without CUDA graphs
+  - `reduce-overhead`: Good for small models
+- `fullgraph`: Enable full graph mode (may conflict with accelerate hooks, default: False)
+- `double_blocks`: Compile double blocks (default: True)
+- `single_blocks`: Compile single blocks (default: True)
+- `dynamic`: Enable dynamic mode for variable input shapes (default: False)
+
+**Optional Parameters**:
+- `dynamo_cache_size_limit`: torch._dynamo.config.cache_size_limit (default: 64)
+- `force_parameter_static_shapes`: torch._dynamo.config.force_parameter_static_shapes (default: True)
+
+**Outputs**: `MODEL` (connects to Flux2 SDNQ Sampler V2 or SDNQ Sampler V2)
+
+**Supported Model Types**:
+- DiffusionPipeline (comfyui-sdnq-splited SDNQ models)
+- Nunchaku Flux2 models (ComfyFluxWrapper)
+- Standard ComfyUI Flux models
+
+**Performance Notes**:
+- **First Run**: Compilation overhead (~30-60 seconds) - compiles the computational graph
+- **Subsequent Runs**: Uses cached compiled version for faster inference
+- **Expected Speedup**: Approximately 30% faster generation on subsequent runs after compilation (tested results)
+- Works best with `mode="max-autotune"` for maximum performance
+
+**Important**:
+- This node must be placed between Model Loader/LoRA Loader and Sampler nodes
+- Compilation is verified automatically - check console logs for confirmation
+- If compilation fails, the node will raise an error (ensure PyTorch 2.0+ is installed)
+- Only compiles transformer blocks - other layers are not compiled (for stability)
+
+**Note**: This node is for FLUX.2 models only. Other models have not been tested.
+
+---
+
 ## Available Models
 
 **FLUX.2 models only** - Other models have not been tested.
@@ -251,10 +328,16 @@ Models are available in uint4 (max VRAM savings) or int8 (best quality). Browse 
 
 **For All Memory Modes**:
 - SDPA (Scaled Dot Product Attention) is always active - automatic PyTorch 2.0+ optimization
+- **TorchCompile**: Use Flux2 SDNQ TorchCompile node for performance boost (approximately 30% faster on subsequent runs after initial compilation, based on test results)
+  - Place between Model Loader/LoRA Loader and Sampler
+  - Use `mode="max-autotune"` for best performance
+  - First run will be slower (30-60s compilation), subsequent runs are approximately 30% faster
 - Enable the xFormers option in the UI (safe to try)
 - Enable the Flash Attention (FA) option in the UI - faster inference and lower VRAM
 - Enable the Sage Attention (SA) option in the UI - optimized attention computation
 - Use `enable_vae_tiling=True` for large images (>1536px) to prevent OOM
+
+**⚠️ Important**: For Flux2 models, xFormers, Flash Attention (FA), and Sage Attention (SA) have **no effect** - these optimizations are not applicable to Flux2's architecture. Use TorchCompile instead for performance improvements.
 
 **Scheduler Selection**:
 - FLUX.2: Use `FlowMatchEulerDiscreteScheduler` (only scheduler supported)
